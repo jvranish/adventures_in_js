@@ -1,0 +1,279 @@
+<html><head>
+<title>Another WebGL Experiment</title>
+
+
+<script id="passthrough-shader" type="x-shader/x-vertex">
+attribute vec4 a_position;
+attribute vec2 a_texCoord;
+varying vec2 v_texCoord;
+
+
+void main() {
+  gl_Position = position;
+  v_texCoord = a_texCoord;
+}
+</script>
+
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+uniform vec2 u_resolution;
+
+varying vec2 v_texCoord;
+
+void main() {
+   // convert the rectangle from pixels to 0.0 to 1.0
+   vec2 zeroToOne = a_position / u_resolution;
+
+   // convert from 0->1 to 0->2
+   vec2 zeroToTwo = zeroToOne * 2.0;
+
+   // convert from 0->2 to -1->+1 (clipspace)
+   vec2 clipSpace = zeroToTwo - 1.0;
+
+   gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+
+   // pass the texCoord to the fragment shader
+   // The GPU will interpolate this value between points.
+   v_texCoord = a_texCoord;
+}
+</script>
+
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// our texture
+uniform sampler2D u_image;
+
+// // the texCoords passed in from the vertex shader.
+varying vec2 v_texCoord;
+
+void main() {
+   gl_FragColor = texture2D(u_image, v_texCoord);
+}
+</script>
+
+
+
+<script id="black-hole-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// our texture
+uniform sampler2D u_image;
+uniform sampler2D u_bullet;
+uniform vec2 u_target_pos;
+
+// // the texCoords passed in from the vertex shader.
+varying vec2 v_texCoord;
+
+void main() {
+
+  vec2 balanced = v_texCoord - u_target_pos;
+
+  vec2 normalized = normalize(balanced);
+  float distance = length(balanced);
+  // The strength of the gravitational field at this point:
+  float scaled = distance * 400.0;
+  float strength = 1.0 / ( scaled * scaled );
+  vec3 rayDirection = vec3(0,0,1);
+  vec3 surfaceNormal = normalize( vec3(normalized, 1.0/strength) ); // normalized
+  vec3 newBeam = refract(rayDirection, surfaceNormal, 2.6);
+  vec2 newPos = v_texCoord + vec2( newBeam.x, newBeam.y)*100.0;
+  vec4 out_color = texture2D(u_image, newPos);
+  out_color *= length(newBeam);
+
+  vec4 orig_color = texture2D(u_image, v_texCoord);
+
+
+  if (distance < 0.5)
+  {
+    vec4 bullet_strength = texture2D(u_bullet, v_texCoord - u_target_pos + vec2(0.5, 0.5));
+
+    vec3 effect_color = bullet_strength.r * out_color.rgb;
+    gl_FragColor = vec4(orig_color.rgb * (1.0-bullet_strength.a) + effect_color * bullet_strength.a, 1.0);
+  }
+  else
+  {
+    gl_FragColor = orig_color;
+  }
+
+
+  // gl_FragColor = vec4(bullet_strength * out_color.rgb + orig_color.rgb * (1.0-bullet_strength), 1.0);
+  // gl_FragColor = vec4(orig_color.rgb * bullet_strength, 1.0);
+
+  // if (length(v_texCoord - u_target_pos) < 0.06)
+  // {
+  //   gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  //   // gl_FragColor = texture2D(u_image, v_texCoord);
+  // }
+  // else
+  // {
+  //   gl_FragColor = vec4(out_color.rgb, 1.0);
+  // }
+}
+</script>
+
+
+
+<script id="bloom-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// Bloom filter
+// http://myheroics.wordpress.com/2008/09/04/glsl-bloom-shader/
+//
+// Spooner: Added uniforms for setting bloom intensity.
+
+uniform sampler2D in_Texture; // Original in_Texture.
+varying vec2 var_TexCoord; // Pixel to process on this pass
+
+uniform float in_GlareSize; // 0.004 is good
+uniform float in_Power; // 0.25 is good
+
+void main()
+{
+    vec4 sum = vec4(0);
+
+    for(int i = -6; i < 6; i++)
+    {
+        for (int j = -5; j < 5; j++)
+        {
+            vec4 t = texture2D(in_Texture, var_TexCoord + vec2(j, i) * in_GlareSize);
+            sum += t * in_Power * t.a;
+        }
+    }
+
+    vec4 base_color = texture2D(in_Texture, var_TexCoord);
+    vec4 bloomed;
+
+    if (base_color.a == 0.0) {
+    if (base_color.r < 0.3)
+    {
+        bloomed = sum * sum * 0.012 + base_color;
+    }
+    else if(base_color.r < 0.5)
+    {
+        bloomed = sum * sum * 0.009 + base_color;
+    }
+    else
+    {
+        bloomed = sum * sum * 0.0075 + base_color;
+    }
+    gl_FragColor = bloomed;
+    // gl_FragColor = vec4(bloomed.rgb, base_color.a);
+    }
+    else
+    {
+    gl_FragColor = base_color;
+
+    }
+}
+</script>
+
+
+<script src="./twgl-full.js"></script>
+<script>
+  function start() {
+    "use strict";
+
+    var mousePos = { x: 0.0, y: 0.0 }
+
+    function getMousePos(canvas, evt) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+    var canvas = document.getElementById('canvas');
+
+    canvas.addEventListener('mousemove', function(evt) {
+      mousePos = getMousePos(canvas, evt);
+    }, false);
+
+
+    var gl = twgl.getWebGLContext(document.getElementById("canvas"));
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+    var textures = twgl.createTextures(gl, {
+      warrior: { src: "warrior.base.152.png", mag: gl.NEAREST },
+      ext_test: { src: "ExteriorTest-760306.jpg", mag: gl.NEAREST },
+      bullet_hole: { src: "bullet.png", mag: gl.NEAREST },
+    })
+
+    var fbi = twgl.createFramebufferInfo(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    var programInfo = twgl.createProgramInfo(gl, ["2d-vertex-shader", "2d-fragment-shader"]);
+
+    var blackHoleProgram = twgl.createProgramInfo(gl, ["2d-vertex-shader", "black-hole-fragment-shader"]);
+
+    var arrays = {
+      a_position: { numComponents: 2, data: [
+        0, 0,
+        640, 0,
+        0, 480,
+        0, 480,
+        640, 0,
+        640, 480]},
+      a_texCoord: { numComponents: 2, data: [
+          0.0,  0.0,
+          1.0,  0.0,
+          0.0,  1.0,
+          0.0,  1.0,
+          1.0,  0.0,
+          1.0,  1.0]},
+    };
+    var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+
+
+    function render(time) {
+      twgl.resizeCanvasToDisplaySize(gl.canvas);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      gl.disable(gl.BLEND);
+
+      var uniforms = {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_image: textures.ext_test,
+      };
+      gl.useProgram(programInfo.program);
+      twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+      twgl.setUniforms(programInfo, uniforms);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbi.framebuffer);
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      // gl.enable(gl.BLEND);
+      gl.useProgram(blackHoleProgram.program);
+      twgl.setBuffersAndAttributes(gl, blackHoleProgram, bufferInfo);
+      twgl.setUniforms(blackHoleProgram, {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_image: fbi.attachments[0],
+        u_bullet: textures.bullet_hole,
+        u_target_pos: [mousePos.x/640, mousePos.y/480],
+      });
+      twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  }
+</script>
+
+
+
+
+</head>
+
+<body onload="start();">
+<h1>My Experiment!</h1><canvas id="canvas" width="640" height="480"></canvas>
+
+</body>

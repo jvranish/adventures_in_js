@@ -1,0 +1,178 @@
+<html><head>
+<title>Another WebGL Experiment</title>
+
+
+<script id="passthrough-shader" type="x-shader/x-vertex">
+attribute vec4 position;
+attribute vec2 a_texCoord;
+varying vec2 var_TexCoord;
+
+
+void main() {
+  gl_Position = position;
+  var_TexCoord = a_texCoord;
+}
+</script>
+
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+varying vec2 v_texCoord;
+
+void main() {
+
+   gl_Position = vec4(a_position*0.2, 0, 1);;
+
+   v_texCoord = a_texCoord;
+}
+</script>
+
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// our texture
+uniform sampler2D u_image;
+
+// // the texCoords passed in from the vertex shader.
+varying vec2 v_texCoord;
+
+void main() {
+   gl_FragColor = texture2D(u_image, v_texCoord);
+}
+</script>
+
+<script id="bloom-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// Bloom filter
+// http://myheroics.wordpress.com/2008/09/04/glsl-bloom-shader/
+//
+// Spooner: Added uniforms for setting bloom intensity.
+
+uniform sampler2D in_Texture; // Original in_Texture.
+varying vec2 var_TexCoord; // Pixel to process on this pass
+
+uniform float in_GlareSize; // 0.004 is good
+uniform float in_Power; // 0.25 is good
+
+void main()
+{
+    vec4 sum = vec4(0);
+
+    for(int i = -6; i < 6; i++)
+    {
+        for (int j = -5; j < 5; j++)
+        {
+            vec4 t = texture2D(in_Texture, var_TexCoord + vec2(j, i) * in_GlareSize);
+            sum += t * in_Power * t.a;
+        }
+    }
+
+    vec4 base_color = texture2D(in_Texture, var_TexCoord);
+    vec4 bloomed;
+
+    if (base_color.a == 0.0) {
+    if (base_color.r < 0.3)
+    {
+        bloomed = sum * sum * 0.012 + base_color;
+    }
+    else if(base_color.r < 0.5)
+    {
+        bloomed = sum * sum * 0.009 + base_color;
+    }
+    else
+    {
+        bloomed = sum * sum * 0.0075 + base_color;
+    }
+    gl_FragColor = bloomed;
+    // gl_FragColor = vec4(bloomed.rgb, base_color.a);
+    }
+    else
+    {
+    gl_FragColor = base_color;
+
+    }
+}
+</script>
+
+
+<script src="./twgl-full.js"></script>
+<script>
+  function start() {
+    "use strict";
+    var gl = twgl.getWebGLContext(document.getElementById("canvas"));
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+    var textures = twgl.createTextures(gl, {
+      warrior: { src: "warrior.base.152.png", mag: gl.NEAREST }
+    })
+
+    var fbi = twgl.createFramebufferInfo(gl);
+
+    var programInfo = twgl.createProgramInfo(gl, ["2d-vertex-shader", "2d-fragment-shader"]);
+
+    var bloomProgramInfo = twgl.createProgramInfo(gl, ["passthrough-shader", "bloom-shader"]);
+
+    var arrays = {
+      a_position: { numComponents: 2, data: [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]},
+      a_texCoord: { numComponents: 2, data: [
+          0.0,  0.0,
+          1.0,  0.0,
+          0.0,  1.0,
+          0.0,  1.0,
+          1.0,  0.0,
+          1.0,  1.0]},
+    };
+    var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+
+
+    function render(time) {
+      twgl.resizeCanvasToDisplaySize(gl.canvas);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      gl.disable(gl.BLEND);
+
+      var uniforms = {
+        resolution: [gl.canvas.width, gl.canvas.height],
+        u_image: textures.warrior,
+      };
+      gl.useProgram(programInfo.program);
+      twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+      twgl.setUniforms(programInfo, uniforms);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbi.framebuffer);
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.enable(gl.BLEND);
+      gl.useProgram(bloomProgramInfo.program);
+      twgl.setBuffersAndAttributes(gl, bloomProgramInfo, bufferInfo);
+      twgl.setUniforms(bloomProgramInfo, {
+        in_Texture: fbi.attachments[0],
+        in_GlareSize: 0.004,
+        in_Power: 0.25,
+      });
+      twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  }
+</script>
+
+
+
+
+</head>
+
+<body onload="start();">
+<h1>My Experiment!</h1><canvas id="canvas" width="600" height="400"></canvas>
+
+</body>

@@ -1,0 +1,194 @@
+<html><head>
+<title>WebGL - 2D Image</title>
+<link type="text/css" href="WebGL - 2D Image_files/webgl-tutorials.css" rel="stylesheet">
+<script type="text/javascript" src="WebGL - 2D Image_files/webgl-utils.js"></script>
+<script type="text/javascript" src="image.js"></script>
+<script>
+window.onload = main;
+var image = new Image();
+var x = 10;
+var y = 10;
+var canvas;
+var gl;
+
+var currentlyPressedKeys = {};
+function handleKeyDown(event) {
+    currentlyPressedKeys[event.keyCode] = true;
+}
+function handleKeyUp(event) {
+    currentlyPressedKeys[event.keyCode] = false;
+}
+
+function handleKeys() {
+    if (currentlyPressedKeys[37]) {
+        // Left cursor key
+        x -= 1;
+    }
+    if (currentlyPressedKeys[39]) {
+        // Right cursor key
+        x += 1;
+    }
+    if (currentlyPressedKeys[38]) {
+        // Up cursor key
+        y -= 1;
+    }
+    if (currentlyPressedKeys[40]) {
+        // Down cursor key
+        y += 1;
+    }
+}
+
+function main() {
+  document.onkeydown = handleKeyDown;
+  document.onkeyup = handleKeyUp;
+  image.src = my_image();  // MUST BE SAME DOMAIN!!!
+  image.onload = function() {
+    canvas = document.getElementById("canvas");
+    gl = getWebGLContext(canvas);
+    requestAnimFrame(tick);
+  }
+}
+
+function drawPic() {
+  // Get A WebGL context
+  var canvas = document.getElementById("canvas");
+  var ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,400, 300);
+  ctx.drawImage(image,x,y);
+}
+
+function tick() {
+  requestAnimFrame(tick);
+  handleKeys();
+  // drawPic();
+  render();
+}
+
+function render() {
+  // Get A WebGL context
+
+  if (!gl) {
+    return;
+  }
+
+  // setup GLSL program
+  vertexShader = createShaderFromScriptElement(gl, "2d-vertex-shader");
+  fragmentShader = createShaderFromScriptElement(gl, "2d-fragment-shader");
+  program = createProgram(gl, [vertexShader, fragmentShader]);
+  gl.useProgram(program);
+
+  // look up where the vertex data needs to go.
+  var positionLocation = gl.getAttribLocation(program, "a_position");
+  var texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+
+  // provide texture coordinates for the rectangle.
+  var texCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      0.0,  0.0,
+      1.0,  0.0,
+      0.0,  1.0,
+      0.0,  1.0,
+      1.0,  0.0,
+      1.0,  1.0]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(texCoordLocation);
+  gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+  // Create a texture.
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Set the parameters so we can render any size image.
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  // Upload the image into the texture.
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+  // lookup uniforms
+  var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+
+  // set the resolution
+  gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+
+  gl.enableVertexAttribArray(positionLocation);
+
+  // Set a rectangle the same size as the image.
+  setRectangle(gl, x, y, image.width, image.height, positionLocation);
+
+  // Draw the rectangle.
+  setRectangle(gl, x+100, y+100, image.width, image.height, positionLocation);
+  // gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+function randomInt(range) {
+  return Math.floor(Math.random() * range);
+}
+
+function setRectangle(gl, x, y, width, height, positionLocation) {
+  var x1 = x;
+  var x2 = x + width;
+  var y1 = y;
+  var y2 = y + height;
+  var buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  // Create a buffer for the position of the rectangle corners.
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     x1, y1,
+     x2, y1,
+     x1, y2,
+     x1, y2,
+     x2, y1,
+     x2, y2]), gl.STATIC_DRAW);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+</script>
+<!-- vertex shader -->
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+uniform vec2 u_resolution;
+
+varying vec2 v_texCoord;
+
+void main() {
+   // convert the rectangle from pixels to 0.0 to 1.0
+   vec2 zeroToOne = a_position / u_resolution;
+
+   // convert from 0->1 to 0->2
+   vec2 zeroToTwo = zeroToOne * 2.0;
+
+   // convert from 0->2 to -1->+1 (clipspace)
+   vec2 clipSpace = zeroToTwo - 1.0;
+
+   gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+
+   // pass the texCoord to the fragment shader
+   // The GPU will interpolate this value between points.
+   v_texCoord = a_texCoord;
+}
+</script>
+<!-- fragment shader -->
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// our texture
+uniform sampler2D u_image;
+
+// the texCoords passed in from the vertex shader.
+varying vec2 v_texCoord;
+
+void main() {
+   gl_FragColor = texture2D(u_image, v_texCoord);
+}
+</script></head>
+<body>
+<h1>WebGL - 2D Image</h1><canvas id="canvas" width="400" height="300"></canvas>
+
+
+</html>

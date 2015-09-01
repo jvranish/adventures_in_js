@@ -1,0 +1,361 @@
+<html><head>
+<title>My First WebGL Experiment</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+
+
+<script type="text/javascript">
+    var gl;
+    var currentlyPressedKeys = {};
+    var pos_x = 50;
+    var pos_y = 50;
+    var stone_texture;
+    var warrior_texture;
+    var plainTextureProgram;
+    var bloomTextureProgram;
+    var texCoordBuffer;
+
+    function initGL(canvas) {
+        try {
+            gl = canvas.getContext("experimental-webgl");
+            gl.viewportWidth = canvas.width;
+            gl.viewportHeight = canvas.height;
+        } catch (e) {
+        }
+        if (!gl) {
+            alert("Could not initialise WebGL, sorry :-(");
+        }
+        return gl
+    }
+
+    function getShader(gl, id) {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript) {
+            return null;
+        }
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3) {
+                str += k.textContent;
+            }
+            k = k.nextSibling;
+        }
+        var shader;
+        if (shaderScript.type == "x-shader/x-fragment") {
+            shader = gl.createShader(gl.FRAGMENT_SHADER);
+        } else if (shaderScript.type == "x-shader/x-vertex") {
+            shader = gl.createShader(gl.VERTEX_SHADER);
+        } else {
+            return null;
+        }
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+        return shader;
+    }
+
+    function handleLoadedTexture(texture) {
+        // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        // Set the parameters so we can render any size image.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+        // Upload the image into the texture.
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    function initShaders() {
+      // setup GLSL program
+      var vertexShader = getShader(gl, "2d-vertex-shader");
+      var fragmentShader = getShader(gl, "2d-fragment-shader");
+
+      var shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+      if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+          alert("Could not initialise shaders");
+      }
+
+      // look up where the vertex data needs to go.
+      shaderProgram.positionLocationAttribute = gl.getAttribLocation(shaderProgram, "a_position");
+      gl.enableVertexAttribArray(shaderProgram.positionLocationAttribute);
+
+      shaderProgram.texCoordLocationAttribute = gl.getAttribLocation(shaderProgram, "a_texCoord");
+      gl.enableVertexAttribArray(shaderProgram.texCoordLocationAttribute);
+
+      shaderProgram.resolutionLocation = gl.getUniformLocation(shaderProgram, "u_resolution");
+
+      plainTextureProgram = shaderProgram;
+
+
+
+      var fragmentShaderBloom = getShader(gl, "2d-fragment-shader-bloom");
+
+      var bloomShaderProgram = gl.createProgram();
+      gl.attachShader(bloomShaderProgram, vertexShader);
+      gl.attachShader(bloomShaderProgram, fragmentShaderBloom);
+      gl.linkProgram(bloomShaderProgram);
+      if (!gl.getProgramParameter(bloomShaderProgram, gl.LINK_STATUS)) {
+          alert("Could not initialise shaders");
+      }
+
+      // look up where the vertex data needs to go.
+
+      bloomShaderProgram.positionLocationAttribute = gl.getAttribLocation(bloomShaderProgram, "a_position");
+      gl.enableVertexAttribArray(bloomShaderProgram.positionLocationAttribute);
+
+      bloomShaderProgram.texCoordLocationAttribute = gl.getAttribLocation(bloomShaderProgram, "a_texCoord");
+      gl.enableVertexAttribArray(bloomShaderProgram.texCoordLocationAttribute);
+
+      bloomShaderProgram.resolutionLocation = gl.getUniformLocation(bloomShaderProgram, "u_resolution");
+
+      bloomTextureProgram = bloomShaderProgram;
+
+    }
+
+    function initTexture(src) {
+        var tex = gl.createTexture();
+        tex.image = new Image();
+        tex.image.onload = function () {
+            handleLoadedTexture(tex)
+        }
+        tex.image.src = src;
+        return tex;
+    }
+
+    function handleKeyDown(event) {
+        currentlyPressedKeys[event.keyCode] = true;
+    }
+    function handleKeyUp(event) {
+        currentlyPressedKeys[event.keyCode] = false;
+    }
+
+    function handleKeys() {
+        if (currentlyPressedKeys[37]) {
+            // Left cursor key
+            pos_x -= 1;
+        }
+        if (currentlyPressedKeys[39]) {
+            // Right cursor key
+            pos_x += 1;
+        }
+        if (currentlyPressedKeys[38]) {
+            // Up cursor key
+            pos_y -= 1;
+        }
+        if (currentlyPressedKeys[40]) {
+            // Down cursor key
+            pos_y += 1;
+        }
+    }
+
+    function drawImage(texture, x, y, asdf) {
+      var x1 = x;
+      var x2 = x + texture.image.width;
+      var y1 = y;
+      var y2 = y + texture.image.height;
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.vertexAttribPointer(asdf.texCoordLocationAttribute, 2, gl.FLOAT, false, 0, 0);
+
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+
+      var buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      // Create a buffer for the position of the rectangle corners.
+      gl.vertexAttribPointer(asdf.positionLocationAttribute, 2, gl.FLOAT, false, 0, 0);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+         x1, y1,
+         x2, y1,
+         x1, y2,
+         x1, y2,
+         x2, y1,
+         x2, y2]), gl.STATIC_DRAW);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      gl.deleteBuffer(buffer);
+    }
+
+    function draw() {
+      gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      // gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.enable(gl.BLEND);
+      gl.disable(gl.DEPTH_TEST);
+      gl.useProgram(plainTextureProgram);
+      gl.uniform2f(plainTextureProgram.resolutionLocation, 400, 300);
+
+      for (i=0;i<12;i++)
+      {
+        for (j=0;j<10;j++)
+        {
+          drawImage(stone_texture, i*32, j*32, plainTextureProgram);
+        }
+      }
+      gl.useProgram(bloomTextureProgram);
+      gl.uniform2f(bloomTextureProgram.resolutionLocation, 400, 300);
+      drawImage(warrior_texture, pos_x, pos_y, bloomTextureProgram);
+      gl.disable(gl.BLEND);
+    }
+
+    function start() {
+      var canvas = document.getElementById("canvas");
+      initGL(canvas);
+
+      stone_texture = initTexture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgAgMAAAAOFJJnAAAADFBMVEWZmZldXV2qqqowMDApdYS5AAABIUlEQVR4XgVAQUvCUAD+tkcNWuGxm94zw0NdgkCRCAqCkNih2H6CHkUpn3aM/oPeDBnroDSE2kMIoS6DWl6irU7hyCAM5cGeASIztsJZERpcN9FkHxDodsukNoSJauFby9/jIDsSl2KaRH9IbflrDHhzBKT2dASnvTshWn2KEfPNnGAWwLg6aLlxLLibso9OCUZnR+LHqQA8VdGs+YmHhvo7X+oJB57SHCOwN+Do5ApsfRlrs1VVYmenyNyckz0aRvD+wpyf7YdwrPpr77nWR3LfvSve5ilk1q1MClMPGq1+mtxyIB4EjTX0JFq+ibgUaZC4kqkqbQGlkfBCXbmGkSk7F7PYAPwl2FbM+DuaEds6VEs2SJv+vC0GaRCCR9ug6X/BEofUSxv9KQAAAABJRU5ErkJggg==")
+      warrior_texture = initTexture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAANlBMVEX///+hoaF/f3/BcTjvp18AAIBkMx6/v79hYWEAAP+gUi3NhT+CQifg4OD///8hISFAQEAAAACF70KKAAAAAXRSTlMAQObYZgAAAOFJREFUeF61kttqxDAMBVd32Ul2t///s5W1hFLL+Kk9T4YZDyT48S/7im15bisw81ZgYdkKRJtCa4069d7W2KGNdQoPFhwNAdtnaNVwBAgjK2CXlfsO5sMwMACoBQqCt4FhFIHAk7+vJzj6XOhMMqhdTwPxN5b7LDIooAHKwTQJSElf+lJVCaH/5jKoowZPgXkKNEZx9M83WgiT0UQwOQwOtSAxuv/BFYX2mAPSiSl5FmQR6EQyxIM5AqWgxMmFDjoiMBt6qgbNQvD6XkK4TxqnyvX8Uc8l1+rmalaLsbL/ct9bJAi+27VawwAAAABJRU5ErkJggg==")
+      initShaders();
+
+      // provide texture coordinates for the rectangle.
+      texCoordBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+          0.0,  0.0,
+          1.0,  0.0,
+          0.0,  1.0,
+          0.0,  1.0,
+          1.0,  0.0,
+          1.0,  1.0]), gl.STATIC_DRAW);
+
+
+
+      // gl.useProgram(plainTextureProgram);
+      // gl.uniform2f(plainTextureProgram.resolutionLocation, canvas.width, canvas.height);
+
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+
+      document.onkeydown = handleKeyDown;
+      document.onkeyup = handleKeyUp;
+
+      tick();
+    }
+
+    function tick() {
+      window.setTimeout(tick, 1000/60);
+      // requestAnimFrame(tick);
+      handleKeys();
+      draw();
+    }
+
+</script>
+
+<!-- vertex shader -->
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+uniform vec2 u_resolution;
+
+varying vec2 v_texCoord;
+
+void main() {
+   // convert the rectangle from pixels to 0.0 to 1.0
+   vec2 zeroToOne = a_position / u_resolution;
+
+   // convert from 0->1 to 0->2
+   vec2 zeroToTwo = zeroToOne * 2.0;
+
+   // convert from 0->2 to -1->+1 (clipspace)
+   vec2 clipSpace = zeroToTwo - 1.0;
+
+   gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+
+   // pass the texCoord to the fragment shader
+   // The GPU will interpolate this value between points.
+   v_texCoord = a_texCoord;
+}
+</script>
+
+<!-- fragment shader -->
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// our texture
+uniform sampler2D u_image;
+
+// the texCoords passed in from the vertex shader.
+varying vec2 v_texCoord;
+
+void main() {
+   vec4 textureColor = texture2D(u_image, vec2(v_texCoord.s, v_texCoord.t));
+   gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+}
+</script>
+
+<script id="2d-fragment-shader-bloom" type="x-shader/x-fragment">
+precision mediump float;
+
+// our texture
+uniform sampler2D u_image;
+
+// the texCoords passed in from the vertex shader.
+varying vec2 v_texCoord;
+
+void main() {
+   // vec4 textureColor = texture2D(u_image, vec2(v_texCoord.s, v_texCoord.t));
+   // gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+    vec2 bla = vec2(0.04);
+    vec4 foo = vec4(2.25);
+    vec4 sum = vec4(0);
+
+    for(int i = -4; i < 4; i++)
+    {
+        for (int j = -3; j < 3; j++)
+        {
+            vec4 t_color = texture2D(u_image, v_texCoord + vec2(j, i) * bla);
+            sum += vec4(0.0, 0.0, t_color.b * t_color.a, 0.0) * foo;
+        }
+    }
+
+    vec4 base_color = texture2D(u_image, vec2(v_texCoord.s, v_texCoord.t));
+    // vec4 sum_color = vec4((sum * sum).rgb, (sum * sum).b);
+    vec4 sum_color;
+    // if (base_color.b > 0.3)
+    // {
+    //     sum_color = sum_color * 0.012 + base_color;
+    // }
+    // else if(base_color.b < 0.5)
+    // {
+    //     sum_color = sum_color * 0.009 + base_color;
+    // }
+    // else
+    // {
+    //     sum_color = sum_color * 0.0075 + base_color;
+    // }
+        sum_color = sum * sum * 0.009;
+
+    if (base_color.a > 0.2)
+    {
+      gl_FragColor =  base_color;
+    }
+    else
+    {
+      gl_FragColor =  vec4(0.0, 0.0, sum_color.b, sum_color.b);
+    }
+    // vec4 sum_color = vec4((sum * sum).rgb, (sum * sum).b);
+
+    // gl_FragColor = texture2D(u_image, vec2(v_texCoord.s, v_texCoord.t));
+}
+</script>
+
+
+</head>
+
+
+
+<body onload="start();">
+<h1>My Experiment!</h1><canvas id="canvas" width="400" height="300"></canvas>
+
+</body>
+</html>
