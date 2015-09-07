@@ -1,0 +1,119 @@
+<html><head>
+<title>Another WebGL Experiment</title>
+
+<!-- Shaders Start -->
+<script id="passthrough-shader" type="x-shader/x-vertex" src="./shaders/passthrough-shader.vert"></script>
+<script id="2d-vertex-shader" type="x-shader/x-vertex" src="./shaders/2d-vertex-shader.vert"></script>
+<script id="2d-fragment-shader" type="x-shader/x-fragment" src="./shaders/2d-fragment-shader.frag"></script>
+<script id="black-hole-fragment-shader" type="x-shader/x-fragment" src="./shaders/black-hole-fragment-shader.frag"></script>
+<script id="bloom-shader" type="x-shader/x-fragment" src="./shaders/bloom-shader.frag"></script>
+<!-- Shaders End -->
+
+<!-- JavaScript Libraries Start -->
+<script type="text/javascript" src="./js/lib/twgl-full.js"></script>
+<!-- JavaScript Libraries End -->
+<script type="text/javascript">
+  function start() {
+    "use strict";
+
+    var mousePos = { x: 0.0, y: 0.0 }
+
+    function getMousePos(canvas, evt) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+    var canvas = document.getElementById('canvas');
+
+    canvas.addEventListener('mousemove', function(evt) {
+      mousePos = getMousePos(canvas, evt);
+    }, false);
+
+
+    var gl = twgl.getWebGLContext(document.getElementById("canvas"));
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+    var textures = twgl.createTextures(gl, {
+      warrior: { src: "warrior.base.152.png", mag: gl.NEAREST },
+      ext_test: { src: "ExteriorTest-760306.jpg", mag: gl.NEAREST },
+      bullet_hole: { src: "bullet.png", mag: gl.NEAREST },
+    })
+
+    var fbi = twgl.createFramebufferInfo(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    var programInfo = twgl.createProgramInfo(gl, ["2d-vertex-shader", "2d-fragment-shader"]);
+
+    var blackHoleProgram = twgl.createProgramInfo(gl, ["2d-vertex-shader", "black-hole-fragment-shader"]);
+
+    var arrays = {
+      a_position: { numComponents: 2, data: [
+        0, 0,
+        640, 0,
+        0, 480,
+        0, 480,
+        640, 0,
+        640, 480]},
+      a_texCoord: { numComponents: 2, data: [
+          0.0,  0.0,
+          1.0,  0.0,
+          0.0,  1.0,
+          0.0,  1.0,
+          1.0,  0.0,
+          1.0,  1.0]},
+    };
+    var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+
+
+    function render(time) {
+      twgl.resizeCanvasToDisplaySize(gl.canvas);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      gl.disable(gl.BLEND);
+
+      var uniforms = {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_image: textures.ext_test,
+      };
+      gl.useProgram(programInfo.program);
+      twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+      twgl.setUniforms(programInfo, uniforms);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbi.framebuffer);
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      // gl.enable(gl.BLEND);
+      gl.useProgram(blackHoleProgram.program);
+      twgl.setBuffersAndAttributes(gl, blackHoleProgram, bufferInfo);
+      twgl.setUniforms(blackHoleProgram, {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_image: fbi.attachments[0],
+        u_bullet: textures.bullet_hole,
+        u_target_pos: [mousePos.x/640, mousePos.y/480],
+      });
+      twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  }
+</script>
+
+
+
+
+</head>
+
+<body onload="start();">
+<h1>My Experiment!</h1><canvas id="canvas" width="640" height="480"></canvas>
+
+</body>
