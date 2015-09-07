@@ -1,0 +1,76 @@
+<html><head>
+<title>My First WebGL Experiment</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script src="./vector2d.js"></script>
+<script src="./rect.js"></script>
+<script src="./input.js"></script>
+<script src="./utils.js"></script>
+
+<script>
+"use strict";
+
+function randomMap(width, height) {
+  var map = new Array();
+  for (var y = 0; y < height; y++) {
+    map[y] = new Array();
+    for (var x = 0; x < width; x++) {
+      map[y][x] = getRandomInt(0, 1);
+    }
+  }
+  return map;
+}
+
+
+window.onload = main;
+
+function main() {
+  var keyHandler = KeyHandler.setupHandlers(document);
+  var map = randomMap(20, 20);
+  var p = new Vector2d(0,0);
+
+  var LEFT = new Vector2d(-1, 0);
+  var RIGHT = new Vector2d(1, 0);
+  var UP = new Vector2d(0, -1);
+  var DOWN = new Vector2d(0, 1);
+
+  var image = new Image();
+  image.src = './warrior.base.152.png';
+  //todo, add proper image loading delays
+
+
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext("2d");
+
+  function render() {
+    keyHandler.handleKeys(function(currentlyPressedKeys) {
+      if (currentlyPressedKeys[37]) {
+          // Left cursor key
+          p = p.add(LEFT);
+      }
+      if (currentlyPressedKeys[39]) {
+          // Right cursor key
+          p = p.add(RIGHT);
+      }
+      if (currentlyPressedKeys[38]) {
+          // Up cursor key
+          p = p.add(UP);
+      }
+      if (currentlyPressedKeys[40]) {
+          // Down cursor key
+          p = p.add(DOWN);
+      }
+    })
+    ctx.clearRect(0,0,320, 320);
+    ctx.drawImage(image,p.x,p.y);
+    requestAnimationFrame(render);
+  }
+  render();
+}
+
+</script>
+</head>
+<body>
+<h1>My Experiment!</h1><canvas id="canvas" width="320" height="320"></canvas>
+</body>
+</html>
