@@ -5,7 +5,7 @@ function KeyHandler() {
 }
 
 KeyHandler.setupHandlers = function(doc) {
-  return (new KeyHandler()).setupHandlers(doc);
+  return new KeyHandler().setupHandlers(doc);
 }
 
 KeyHandler.prototype = {

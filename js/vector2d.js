@@ -1,107 +1,106 @@
 "use strict";
-function Vector2d(x,y) {
+function Vector2d(x, y) {
   this.x = x;
   this.y = y;
 }
 
 Vector2d.fromScalar = function (scalar) {
-    return new Vector2d(scalar, scalar);
-}
+  return new Vector2d(scalar, scalar);
+};
+Vector2d.setupPrototype = function(f) {
+  f.prototype.add = function (other) {
+    return new this.constructor(this.x + other.x, this.y + other.y);
+  };
+  f.prototype.sub = function (other) {
+    return new this.constructor(this.x - other.x, this.y - other.y);
+  };
+  f.prototype.mul = function (other) {
+    return new this.constructor(this.x * other.x, this.y * other.y);
+  };
+  f.prototype.div = function (other) {
+    return new this.constructor(this.x / other.x, this.y / other.y);
+  };
+  f.prototype.mod = function (other) {
+    return new this.constructor(this.x % other.x, this.y % other.y);
+  };
+  f.prototype.neg = function() {
+    return new this.constructor(-this.x, -this.y);
+  };
 
-Vector2d.prototype = {
-  add : function (other) {
-    return new Vector2d(this.x + other.x, this.y + other.y);
-  },
-  sub : function (other) {
-    return new Vector2d(this.x - other.x, this.y - other.y);
-  },
-  mul : function (other) {
-    return new Vector2d(this.x * other.x, this.y * other.y);
-  },
-  div : function (other) {
-    return new Vector2d(this.x / other.x, this.y / other.y);
-  },
-  mod : function (other) {
-    return new Vector2d(this.x % other.x, this.y % other.y);
-  },
-  neg : function() {
-    return new Vector2d(-this.x, -this.y);
-  },
+  f.prototype.floor = function() {
+    return new this.constructor(Math.floor(this.x), Math.floor(this.y));
+  };
+  f.prototype.ceil = function() {
+    return new this.constructor(Math.ceil(this.x), Math.ceil(this.y));
+  };
 
-  upperLeftCorner : function() {
-    return new Vector2d(Math.floor(this.x), Math.ceil(this.y));
-  },
-  bottomRightCorner : function() {
-    return new Vector2d(Math.ceil(this.x), Math.floor(this.y));
-  },
-
-  equal : function (other) {
+  f.prototype.equal = function (other) {
     return (this.x === other.x) && (this.y === other.y);
-  },
-  greater : function (other) {
+  };
+  f.prototype.greater = function (other) {
     return (this.x > other.x) && (this.y > other.y);
-  },
-  less : function (other) {
+  };
+  f.prototype.less = function (other) {
     return (this.x < other.x) && (this.y < other.y);
-  },
-  greaterOrEqual : function (other) {
+  };
+  f.prototype.greaterOrEqual = function (other) {
     return (this.x >= other.x) && (this.y >= other.y);
-  },
-  lessOrEqual : function (other) {
+  };
+  f.prototype.lessOrEqual = function (other) {
     return (this.x <= other.x) && (this.y <= other.y);
-  },
+  };
 
-  scale : function (scalar) {
-    return new Vector2d(this.x * scalar, this.y * scalar);
-  },
-  each : function (f, other) {
-    return new Vector2d(f(this.x, other.x), f(this.y, other.y));
-  },
-  min : function (other) {
+  f.prototype.scale = function (scalar) {
+    return new this.constructor(this.x * scalar, this.y * scalar);
+  };
+  f.prototype.each = function (f, other) {
+    return new this.constructor(f(this.x, other.x), f(this.y, other.y));
+  };
+  f.prototype.min = function (other) {
     return new this.each(Math.min, other);
-  },
-  max : function (other) {
+  };
+  f.prototype.max = function (other) {
     return new this.each(Math.max, other);
-  },
-  reduce : function(f) {
+  };
+  f.prototype.reduce = function(f) {
     return f(this.x, this.y);
-  },
-  sum : function () {
+  };
+  f.prototype.sum = function () {
     return this.reduce(function(a, b) { return a + b; } )
-  },
-  dot : function (other) {
+  };
+  f.prototype.dot = function (other) {
     return this.mul(other).sum();
-  },
-  magnitude : function () {
+  };
+  f.prototype.magnitude = function () {
     return Math.sqrt(this.dot(this).sum());
-  },
+  };
 
-  perpendicular : function () {
-    return new Vector2d(-this.y, this.x);
-  },
-  normalize : function () {
+  f.prototype.perpendicular = function () {
+    return new this.constructor(-this.y, this.x);
+  };
+  f.prototype.normalize = function () {
     var m = this.magnitude();
     if (m == 0)
-    { return new Vector2d(0, 0); }
+    { return new this.constructor(0, 0); }
     else
-    { return new Vector2d(this.x / m, this.y / m); }
-  },
+    { return new this.constructor(this.x / m, this.y / m); }
+  };
 
-  distance : function (other) {
+  f.prototype.distance = function (other) {
     return this.sub(other).magnitude();
-  },
-  directionTo : function (other) {
+  };
+  f.prototype.directionTo = function (other) {
     return other.sub(this).normalize();
-  },
-  eachGrid : function(f, a, b)
-  {
-    var diff = b.sub(a);
+  };
+  f.prototype.eachGridPoint = function(f, to) {
+    var diff = to.sub(this);
     for (var x = 0; x < diff.x; x++) {
       for (var y = 0; y < diff.y; y++) {
-        var p = a.add(new Vector2d(x, y));
-        f(p);
+        var point = this.add(new this.constructor(x, y));
+        f(point);
       }
     }
-  }
-}
+  };
+};
 
+Vector2d.setupPrototype(Vector2d);
