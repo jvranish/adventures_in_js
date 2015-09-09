@@ -16,14 +16,15 @@ function randomMap(width, height) {
 }
 
 
-// uh ohhhh, a little bit of evil here :P ...
-Number.prototype.mod = function(n) { return ((this % n) + n) % n; }
+var mapSizeTiles = new Vector2d(100, 100);
 
+Vector2d.fromTorusVector2d  = function(v) {
+  return new Vector2d(v.x, v.y);
+}
 function TorusVector2d(x, y) {
-  var mapWidth = 100*32;
-  var mapHeight = 100*32;
-  this.x = x.mod(mapWidth);
-  this.y = y.mod(mapHeight);
+  var mapSize = mapSizeTiles.scale(32);
+  this.x = mod(x, mapSize.x);
+  this.y = mod(y, mapSize.y);
 }
 TorusVector2d.fromVector2d  = function(v) {
   return new TorusVector2d(v.x, v.y);
@@ -31,17 +32,13 @@ TorusVector2d.fromVector2d  = function(v) {
 
 Vector2d.setupPrototype(TorusVector2d);
 
-
 function MapVector2d(x, y) {
-  var mapWidth = 100;
-  var mapHeight = 100;
-  this.x = x.mod(mapWidth);
-  this.y = y.mod(mapHeight);
+  this.x = mod(x, mapSizeTiles.x);
+  this.y = mod(y, mapSizeTiles.y);
 }
 MapVector2d.fromVector2d  = function(v) {
   return new MapVector2d(v.x, v.y);
 }
-
 Vector2d.setupPrototype(MapVector2d);
 
 function main() {
@@ -49,13 +46,13 @@ function main() {
   var context = canvas.getContext("2d");
 
   var keyHandler = KeyHandler.setupHandlers(document);
-  var map = randomMap(100, 100);
+  var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
 
-  var playerPos = new TorusVector2d(200, 200);
-  var LEFT = new Vector2d(-1, 0);
-  var RIGHT = new Vector2d(1, 0);
-  var UP = new Vector2d(0, -1);
-  var DOWN = new Vector2d(0, 1);
+  var playerPos = new TorusVector2d(0, 0);
+  var LEFT = new TorusVector2d(-1, 0);
+  var RIGHT = new TorusVector2d(1, 0);
+  var UP = new TorusVector2d(0, -1);
+  var DOWN = new TorusVector2d(0, 1);
 
   function worldToCanvas(worldCoord)
   {
@@ -92,8 +89,6 @@ function main() {
     return worldToTile(canvasToWorld(canvasCoord));
   }
 
-
-
   var image = new Image();
   image.src = './images/warrior.base.152.png';
   var evergreen = new Image();
@@ -102,45 +97,42 @@ function main() {
   grass.src = './images/grass1.png';
   //todo, add proper image loading delays
 
+  var keyDirections = {
+    37: LEFT,
+    39: RIGHT,
+    38: UP,
+    40: DOWN
+  };
+
+  var tileImages = {
+    0 : evergreen,
+    1 : grass,
+  }
+
   function render() {
     updateCanvas(document, canvas);
 
     context.fillStyle = "#FFFF00";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
+    var dir = new TorusVector2d(0,0);
+
     keyHandler.handleKeys(function(currentlyPressedKeys) {
-      if (currentlyPressedKeys[37]) {
-          // Left cursor key
-          playerPos = playerPos.add(LEFT);
-      }
-      if (currentlyPressedKeys[39]) {
-          // Right cursor key
-          playerPos = playerPos.add(RIGHT);
-      }
-      if (currentlyPressedKeys[38]) {
-          // Up cursor key
-          playerPos = playerPos.add(UP);
-      }
-      if (currentlyPressedKeys[40]) {
-          // Down cursor key
-          playerPos = playerPos.add(DOWN);
+      for (var key in keyDirections) {
+        if (currentlyPressedKeys[key]) {
+          dir = dir.add(keyDirections[key]);
+        }
       }
     })
 
-    var tileGrid = new Rect(new Vector2d(0,0), new Vector2d(canvas.width, canvas.height)).map(canvasToTile).outerCorners();
+    playerPos = playerPos.add(dir.scale(4));
 
+    var tileGrid = new Rect(new Vector2d(0,0), new Vector2d(canvas.width, canvas.height)).map(canvasToTile).outerCorners();
     tileGrid.eachGridPoint(function(tileCoord) {
       var mapCoord = MapVector2d.fromVector2d(tileCoord);
       var tile = map[mapCoord.x][mapCoord.y];
       var canvasCoord = tileToCanvas(tileCoord);
-      if (tile === 0)
-      {
-        context.drawImage(evergreen,canvasCoord.x,canvasCoord.y);
-      }
-      else
-      {
-        context.drawImage(grass,canvasCoord.x,canvasCoord.y);
-      }
+      context.drawImage(tileImages[tile],canvasCoord.x,canvasCoord.y);
     });
 
     var canvasPlayerPos = worldToCanvas(playerPos);
