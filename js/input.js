@@ -1,28 +1,54 @@
 "use strict";
 
-function KeyHandler() {
+function KeyHandler() 
+{
     this.currentlyPressedKeys = {};
 }
 
-KeyHandler.setupHandlers = function(doc) {
-  return new KeyHandler().setupHandlers(doc);
+KeyHandler.prototype.player = null;
+KeyHandler.prototype.canvas = null;
+
+KeyHandler.setupHandlers = function(doc, canvas, player)
+{
+  this.player = player;
+  this.canvas = canvas;
+  return new KeyHandler().setupHandlers(doc, canvas);
 }
 
-KeyHandler.prototype = {
-  setupHandlers : function (doc) {
-    var obj = this;
-    doc.onkeydown = function(event) { obj.keyDownHandler(event) };
-    doc.onkeyup = function(event) { obj.keyUpHandler(event) };
-    return obj;
-  },
-  keyDownHandler : function (event) {
-    this.currentlyPressedKeys[event.keyCode] = true;
-  },
-  keyUpHandler : function (event) {
-    this.currentlyPressedKeys[event.keyCode] = false;
-  },
-  handleKeys : function (f) {
-    f(this.currentlyPressedKeys);
-  }
+KeyHandler.prototype.setupHandlers = function (doc, canvas) 
+{
+  var obj = this;
+  doc.onkeydown = function(event) { obj.keyDownHandler(event) };
+  doc.onkeyup = function(event) { obj.keyUpHandler(event) };
+  doc.oncontextmenu = function(event) { return false; };
+  canvas.oncontextmenu = function(event) { obj.rightClickHandler(event) };
+  return obj;
+}
+
+KeyHandler.prototype.keyDownHandler = function (event) 
+{
+  this.currentlyPressedKeys[event.keyCode] = true;
+}
+
+KeyHandler.prototype.keyUpHandler = function (event) 
+{
+  this.currentlyPressedKeys[event.keyCode] = false;
+}
+
+KeyHandler.prototype.handleKeys = function (f) 
+{
+  f(this.currentlyPressedKeys);
+}
+
+KeyHandler.prototype.rightClickHandler = function(event) 
+{
+  console.log(event);
+  var rect = this.canvas.getBoundingClientRect();
+  
+  var x = event.clientX - rect.left;
+  var y = event.clientY - rect.top;
+  var canvasSize = updateCanvasSize(document, this.canvas)
+  var coordConverter = new CoordinateConverter(this.player.playerPos, new Vector2d(canvasSize.x, canvasSize.y));
+  return false;
 }
 

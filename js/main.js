@@ -20,29 +20,7 @@ function randomMap(width, height) {
 
 
 var mapSizeTiles = new Vector2d(100, 100);
-
-Vector2d.fromTorusVector2d  = function(v) {
-  return new Vector2d(v.x, v.y);
-}
-function TorusVector2d(x, y) {
-  var mapSize = mapSizeTiles.scale(32);
-  this.x = mod(x, mapSize.x);
-  this.y = mod(y, mapSize.y);
-}
-TorusVector2d.fromVector2d  = function(v) {
-  return new TorusVector2d(v.x, v.y);
-}
-
-Vector2d.setupPrototype(TorusVector2d);
-
-function MapVector2d(x, y) {
-  this.x = mod(x, mapSizeTiles.x);
-  this.y = mod(y, mapSizeTiles.y);
-}
-MapVector2d.fromVector2d  = function(v) {
-  return new MapVector2d(v.x, v.y);
-}
-Vector2d.setupPrototype(MapVector2d);
+var mapSize = mapSizeTiles.scale(32);
 
 function TimeTracker() {
   this.last = window.performance.now();
@@ -57,11 +35,10 @@ TimeTracker.prototype.deltaTime = function() {
 function main() {
   var canvas = document.getElementById("viewPort");
   var context = canvas.getContext("2d");
-
-  var keyHandler = KeyHandler.setupHandlers(document);
+  var player = new Character(new Vector2d(0, 0));
+  var keyHandler = KeyHandler.setupHandlers(document, canvas, player);
   var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
-
-  var playerPos = new TorusVector2d(0, 0);
+  
   var LEFT = new Vector2d(-1, 0);
   var RIGHT = new Vector2d(1, 0);
   var UP = new Vector2d(0, -1);
@@ -104,20 +81,27 @@ function main() {
       }
     })
     var speed = 400;
-    playerPos = playerPos.add(dir.scale(speed * dt));
-    var coordConverter = new CoordinateConverter(playerPos, new Vector2d(canvasSize.x, canvasSize.y));
+
+    // if()
+    // player.playerPos = player.playerPos.add(dir.scale(speed * dt));
+    // playerPos = playerPos.add(dir.scale(speed * dt));
+
+    player.playerPos = player.playerPos.add(dir.scale(speed * dt)).mod(mapSize);
+
+
+    var coordConverter = new CoordinateConverter(player.playerPos, new Vector2d(canvasSize.x, canvasSize.y));
     var canvasRect = new Rect(new Vector2d(0, 0), new Vector2d(canvasSize.x, canvasSize.y));
 
     var tileGrid = canvasRect.map(function (v) { return coordConverter.canvasToTile(v); } ).outerCorners();
     tileGrid.eachGridPoint(function(tileCoord) {
-      var mapCoord = MapVector2d.fromVector2d(tileCoord);
+      var mapCoord = tileCoord.mod(mapSizeTiles);
       var tile = map[mapCoord.x][mapCoord.y];
       var canvasCoord = coordConverter.tileToCanvas(tileCoord);
       context.drawImage(tileImages[tile],canvasCoord.x,canvasCoord.y);
     });
 
-    var canvasPlayerPos = coordConverter.worldToCanvas(playerPos);
-    context.drawImage(image,canvasPlayerPos.x,canvasPlayerPos.y);
+    var canvasplayer = coordConverter.worldToCanvas(player.playerPos);
+    context.drawImage(image,canvasplayer.x, canvasplayer.y);
 
   }
 

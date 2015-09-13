@@ -20,8 +20,11 @@ Vector2d.setupPrototype = function(f) {
   f.prototype.div = function (other) {
     return new this.constructor(this.x / other.x, this.y / other.y);
   };
-  f.prototype.mod = function (other) {
+  f.prototype.fmod = function (other) {
     return new this.constructor(this.x % other.x, this.y % other.y);
+  };
+  f.prototype.mod = function (other) {
+    return new this.constructor(mod(this.x, other.x), mod(this.y, other.y));
   };
   f.prototype.neg = function() {
     return new this.constructor(-this.x, -this.y);
