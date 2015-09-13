@@ -22,10 +22,10 @@ function randomMap(width, height) {
 var mapSizeTiles = new Vector2d(100, 100);
 var mapSize = mapSizeTiles.scale(32);
 
-function TimeTracker() {
+function TimeDiffer() {
   this.last = window.performance.now();
 }
-TimeTracker.prototype.deltaTime = function() {
+TimeDiffer.prototype.deltaTime = function() {
   var now = window.performance.now();
   var dt = (now - this.last) / 1000;
   this.last = now;
@@ -34,11 +34,13 @@ TimeTracker.prototype.deltaTime = function() {
 
 function main() {
   var canvas = document.getElementById("viewPort");
+  var canvasBoundRect = canvas.getBoundingClientRect();
+
   var context = canvas.getContext("2d");
   var player = new Character(new Vector2d(0, 0));
   var keyHandler = KeyHandler.setupHandlers(document, canvas, player);
   var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
-  
+
   var LEFT = new Vector2d(-1, 0);
   var RIGHT = new Vector2d(1, 0);
   var UP = new Vector2d(0, -1);
@@ -88,8 +90,10 @@ function main() {
 
     player.playerPos = player.playerPos.add(dir.scale(speed * dt)).mod(mapSize);
 
-
-    var coordConverter = new CoordinateConverter(player.playerPos, new Vector2d(canvasSize.x, canvasSize.y));
+    var coordConverter = new CoordinateConverter(
+      player.playerPos,
+      new Vector2d(canvasSize.x, canvasSize.y),
+      new Vector2d(canvasBoundRect.left, canvasBoundRect.top));
     var canvasRect = new Rect(new Vector2d(0, 0), new Vector2d(canvasSize.x, canvasSize.y));
 
     var tileGrid = canvasRect.map(function (v) { return coordConverter.canvasToTile(v); } ).outerCorners();
@@ -105,9 +109,9 @@ function main() {
 
   }
 
-  var timeTracker = new TimeTracker();
+  var timeDiffer = new TimeDiffer();
   function frame() {
-    var dt = timeTracker.deltaTime();
+    var dt = timeDiffer.deltaTime();
     render(dt);
     requestAnimationFrame(frame);
   }

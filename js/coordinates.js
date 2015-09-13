@@ -1,8 +1,9 @@
 "use strict";
 
-function CoordinateConverter(playerPos, canvasSize) {
+function CoordinateConverter(playerPos, canvasSize, canvasTopLeft) {
     this.playerPos = playerPos;
     this.canvasSize = canvasSize;
+    this.canvasTopLeft = canvasTopLeft
 }
 
 CoordinateConverter.prototype.worldToCanvas = function(worldCoord)
@@ -38,4 +39,13 @@ CoordinateConverter.prototype.tileToCanvas = function(tileCoord)
 CoordinateConverter.prototype.canvasToTile = function(canvasCoord)
 {
   return this.worldToTile(this.canvasToWorld(canvasCoord));
+}
+
+CoordinateConverter.prototype.mouseToCanvas = function(mousePos)
+{
+  return mousePos.sub(this.canvasTopLeft)
+}
+CoordinateConverter.prototype.mouseToWorld = function(mousePos)
+{
+  return canvasToWorld(mouseToCanvas(mousePos));
 }
