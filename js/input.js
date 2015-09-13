@@ -10,13 +10,13 @@ KeyHandler.prototype.canvas = null;
 
 KeyHandler.setupHandlers = function(doc, canvas, player)
 {
-  this.player = player;
-  this.canvas = canvas;
-  return new KeyHandler().setupHandlers(doc, canvas);
+  return new KeyHandler().setupHandlers(doc, canvas, player);
 }
 
-KeyHandler.prototype.setupHandlers = function (doc, canvas) 
+KeyHandler.prototype.setupHandlers = function (doc, canvas, player) 
 {
+  this.player = player;
+  this.canvas = canvas;
   var obj = this;
   doc.onkeydown = function(event) { obj.keyDownHandler(event) };
   doc.onkeyup = function(event) { obj.keyUpHandler(event) };

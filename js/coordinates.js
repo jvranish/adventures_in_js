@@ -43,7 +43,7 @@ CoordinateConverter.prototype.canvasToTile = function(canvasCoord)
 
 CoordinateConverter.prototype.mouseToCanvas = function(mousePos)
 {
-  return mousePos.sub(this.canvasTopLeft)
+  return mousePos.sub(this.canvasTopLeft);
 }
 CoordinateConverter.prototype.mouseToWorld = function(mousePos)
 {
