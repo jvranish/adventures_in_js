@@ -6,7 +6,7 @@ function Rect(ul, br) {
 
 Rect.create = function(a, b) {
   return new Rect(a.min(b), a.max(b));
-}
+};
 
 Rect.prototype.overlaps = function (other) {
   return this.lr.greaterOrEqual(other.ul) && this.ul.less(other.lr);

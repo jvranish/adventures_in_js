@@ -69,7 +69,7 @@ Vector2d.setupPrototype = function(f) {
     return f(this.x, this.y);
   };
   f.prototype.sum = function () {
-    return this.reduce(function(a, b) { return a + b; } )
+    return this.reduce(function(a, b) { return a + b; } );
   };
   f.prototype.dot = function (other) {
     return this.mul(other).sum();
@@ -83,7 +83,7 @@ Vector2d.setupPrototype = function(f) {
   };
   f.prototype.normalize = function () {
     var m = this.magnitude();
-    if (m == 0)
+    if (m === 0)
     { return new this.constructor(0, 0); }
     else
     { return new this.constructor(this.x / m, this.y / m); }

@@ -8,9 +8,9 @@ function updateCanvasSize(doc, canvas) {
 }
 
 function randomMap(width, height) {
-  var map = new Array();
+  var map = [];
   for (var x = 0; x < width; x++) {
-    map[x] = new Array();
+    map[x] = [];
     for (var y = 0; y < height; y++) {
       map[x][y] = getRandomInt(0, 1);
     }
@@ -30,7 +30,7 @@ TimeDiffer.prototype.deltaTime = function() {
   var dt = (now - this.last) / 1000;
   this.last = now;
   return dt;
-}
+};
 
 function main() {
   var canvas = document.getElementById("viewPort");
@@ -38,7 +38,7 @@ function main() {
 
   var context = canvas.getContext("2d");
   var player = new Character(new Vector2d(0, 0));
-  var keyHandler = KeyHandler.setupHandlers(document, canvas, player);
+  var keyHandler = KeyHandler.setupHandlers(document, canvas);
   var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
 
   var LEFT = new Vector2d(-1, 0);
@@ -64,7 +64,7 @@ function main() {
   var tileImages = {
     0 : evergreen,
     1 : grass,
-  }
+  };
 
 
   function render(dt) {
@@ -75,13 +75,17 @@ function main() {
 
     var dir = new Vector2d(0,0);
 
-    keyHandler.handleKeys(function(currentlyPressedKeys) {
+    keyHandler.handleEvents(function(events) {
       for (var key in keyDirections) {
-        if (currentlyPressedKeys[key]) {
+        if (events.currentlyPressedKeys[key]) {
           dir = dir.add(keyDirections[key]);
         }
       }
-    })
+      if (events.mouseButtonPressEvents[2])
+      {
+        console.log(events.mouseButtonPressEvents[2]);
+      }
+    });
     var speed = 400;
 
     // if()
@@ -117,6 +121,3 @@ function main() {
   }
   requestAnimationFrame(frame);
 }
-
-
-
