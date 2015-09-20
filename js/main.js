@@ -61,6 +61,17 @@ function main() {
     40: DOWN
   };
 
+  var cardinalDirections = [
+    {key: new Vector2d(0,  -1), value: "n"},
+    {key: new Vector2d(1,  -1), value: "ne"},
+    {key: new Vector2d(1,   0), value: "e"},
+    {key: new Vector2d(1,   1), value: "se"},
+    {key: new Vector2d(0,   1), value: "s"},
+    {key: new Vector2d(-1,  1), value: "sw"},
+    {key: new Vector2d(-1,  0), value: "w"},
+    {key: new Vector2d(-1, -1), value: "nw"},
+  ];
+
   var tileImages = {
     0 : evergreen,
     1 : grass,

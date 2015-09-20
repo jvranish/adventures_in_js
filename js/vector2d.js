@@ -89,6 +89,14 @@ Vector2d.setupPrototype = function(f) {
     { return new this.constructor(this.x / m, this.y / m); }
   };
 
+  f.prototype.clipTo = function(dist) {
+    mag = this.magnitude();
+    if (mag > dist)
+    {
+      this.scale(dist / mag);
+    }
+  };
+
   f.prototype.distance = function (other) {
     return this.sub(other).magnitude();
   };
@@ -103,6 +111,16 @@ Vector2d.setupPrototype = function(f) {
         f(point);
       }
     }
+  };
+  f.prototype.lookupByDir = function(vectorDict) {
+    vectorDictClone = vectorDict.slice(0);
+    vectorDictClone.sort(function(a, b) {
+      var thisN = this.normalize();
+      var aN = a.key.normalize();
+      var bN = b.key.normalize();
+      return thisN.dot(aN) - thisN.dot(bN);
+    });
+    return vectorDictClone[0].value;
   };
 };
 
