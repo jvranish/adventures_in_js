@@ -75,7 +75,7 @@ Vector2d.setupPrototype = function(f) {
     return this.mul(other).sum();
   };
   f.prototype.magnitude = function () {
-    return Math.sqrt(this.dot(this).sum());
+    return Math.sqrt(this.dot(this));
   };
 
   f.prototype.perpendicular = function () {
@@ -90,10 +90,11 @@ Vector2d.setupPrototype = function(f) {
   };
 
   f.prototype.clipTo = function(dist) {
-    mag = this.magnitude();
-    if (mag > dist)
-    {
-      this.scale(dist / mag);
+    var mag = this.magnitude();
+    if (mag > dist) {
+      return this.scale(dist / mag);
+    } else {
+      return this
     }
   };
 
@@ -113,7 +114,7 @@ Vector2d.setupPrototype = function(f) {
     }
   };
   f.prototype.lookupByDir = function(vectorDict) {
-    vectorDictClone = vectorDict.slice(0);
+    var vectorDictClone = vectorDict.slice(0);
     vectorDictClone.sort(function(a, b) {
       var thisN = this.normalize();
       var aN = a.key.normalize();

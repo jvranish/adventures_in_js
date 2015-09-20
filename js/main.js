@@ -33,18 +33,18 @@ TimeDiffer.prototype.deltaTime = function() {
 };
 
 function main() {
-  var canvas = document.getElementById("viewPort");
-  var canvasBoundRect = canvas.getBoundingClientRect();
-
-  var context = canvas.getContext("2d");
-  var player = new Character(new Vector2d(0, 0));
-  var keyHandler = KeyHandler.setupHandlers(document, canvas);
-  var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
-
   var LEFT = new Vector2d(-1, 0);
   var RIGHT = new Vector2d(1, 0);
   var UP = new Vector2d(0, -1);
   var DOWN = new Vector2d(0, 1);
+
+  var canvas = document.getElementById("viewPort");
+  var canvasBoundRect = canvas.getBoundingClientRect();
+
+  var context = canvas.getContext("2d");
+  var player = new Character(new Vector2d(0, 0), RIGHT);
+  var keyHandler = KeyHandler.setupHandlers(document, canvas);
+  var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
 
   var image = new Image();
   image.src = './images/warrior.base.152.png';
@@ -77,12 +77,21 @@ function main() {
     1 : grass,
   };
 
+  function update(dt) {
+
+  }
+
 
   function render(dt) {
     var canvasSize = updateCanvasSize(document, canvas);
 
     context.fillStyle = "#FFFF00";
     context.fillRect(0, 0, canvasSize.x, canvasSize.y);
+
+    var coordConverter = new CoordinateConverter(
+      player.playerPos,
+      new Vector2d(canvasSize.x, canvasSize.y),
+      new Vector2d(canvasBoundRect.left, canvasBoundRect.top));
 
     var dir = new Vector2d(0,0);
 
@@ -94,21 +103,32 @@ function main() {
       }
       if (events.mouseButtonPressEvents[2])
       {
-        console.log(events.mouseButtonPressEvents[2]);
+        var worldPos = coordConverter.canvasToWorld(events.mouseButtonPressEvents[2]);
+        player.setDestincation(worldPos.mod(mapSize));
+        // console.log(events.mouseButtonPressEvents[2]);
+        // console.log(worldPos);
+        // console.log(worldPos.mod(mapSize));
       }
     });
     var speed = 400;
+    var maxTravelDist = speed * dt;
 
-    // if()
-    // player.playerPos = player.playerPos.add(dir.scale(speed * dt));
-    // playerPos = playerPos.add(dir.scale(speed * dt));
-
-    player.playerPos = player.playerPos.add(dir.scale(speed * dt)).mod(mapSize);
+    if (player.destinationPos)
+    {
+      // this is not exactly super intuitive, I'm going to try to make a generic TorusVector class
+      // that can handle the wrap around more transparently.
+      var displacement = player.destinationPos.sub(player.playerPos).add(mapSize.scale(0.5)).mod(mapSize).sub(mapSize.scale(0.5));
+      // console.log(displacement);
+      var moveAmount = displacement.clipTo(maxTravelDist);
+      player.playerPos = player.playerPos.add(moveAmount).mod(mapSize);
+    }
 
     var coordConverter = new CoordinateConverter(
       player.playerPos,
       new Vector2d(canvasSize.x, canvasSize.y),
       new Vector2d(canvasBoundRect.left, canvasBoundRect.top));
+
+
     var canvasRect = new Rect(new Vector2d(0, 0), new Vector2d(canvasSize.x, canvasSize.y));
 
     var tileGrid = canvasRect.map(function (v) { return coordConverter.canvasToTile(v); } ).outerCorners();
@@ -127,6 +147,7 @@ function main() {
   var timeDiffer = new TimeDiffer();
   function frame() {
     var dt = timeDiffer.deltaTime();
+    update(dt);
     render(dt);
     requestAnimationFrame(frame);
   }
