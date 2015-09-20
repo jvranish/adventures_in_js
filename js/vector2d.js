@@ -38,7 +38,10 @@ Vector2d.setupPrototype = function(f) {
   };
 
   f.prototype.equal = function (other) {
-    return (this.x === other.x) && (this.y === other.y);
+    if(other === null) {
+      return false;
+    }
+    return (this.x + 0.005 > other.x && this.x - 0.005 < other.x) && (this.y + 0.005 > other.y && this.y - 0.005 < other.y);
   };
   f.prototype.greater = function (other) {
     return (this.x > other.x) && (this.y > other.y);

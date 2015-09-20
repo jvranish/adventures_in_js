@@ -8,7 +8,7 @@ Character.prototype.isWalking = function() {
 	return (this.destinationPos !== null);
 };
 
-Character.prototype.setDestincation = function(dest) {
+Character.prototype.setDestination = function(dest) {
 	if (!this.playerPos.equal(dest)) {
 		this.facingDir = this.playerPos.directionTo(dest);
 		this.destinationPos = dest;

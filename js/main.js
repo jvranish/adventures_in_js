@@ -104,7 +104,7 @@ function main() {
       if (events.mouseButtonPressEvents[2])
       {
         var worldPos = coordConverter.canvasToWorld(events.mouseButtonPressEvents[2]);
-        player.setDestincation(worldPos.mod(mapSize));
+        player.setDestination(worldPos.mod(mapSize));
         // console.log(events.mouseButtonPressEvents[2]);
         // console.log(worldPos);
         // console.log(worldPos.mod(mapSize));
@@ -117,7 +117,13 @@ function main() {
     {
       // this is not exactly super intuitive, I'm going to try to make a generic TorusVector class
       // that can handle the wrap around more transparently.
-      var displacement = player.destinationPos.sub(player.playerPos).add(mapSize.scale(0.5)).mod(mapSize).sub(mapSize.scale(0.5));
+      var displacement = player
+        .destinationPos
+        .sub(player.playerPos)
+        .add(mapSize.scale(0.5))
+        .mod(mapSize)
+        .sub(mapSize.scale(0.5))
+        .sub(new Vector2d(16, 16));
       // console.log(displacement);
       var moveAmount = displacement.clipTo(maxTravelDist);
       player.playerPos = player.playerPos.add(moveAmount).mod(mapSize);
@@ -141,6 +147,17 @@ function main() {
 
     var canvasplayer = coordConverter.worldToCanvas(player.playerPos);
     context.drawImage(image,canvasplayer.x, canvasplayer.y);
+    if(player.playerPos.add(new Vector2d(16, 16)).equal(player.destinationPos)){
+      player.destinationPos = null;
+    } else if(player.destinationPos !== null){
+      context.fillStyle = "#FF0000";
+      context.fillRect(
+        coordConverter.worldToCanvas(player.destinationPos).x - 3, 
+        coordConverter.worldToCanvas(player.destinationPos).y - 3, 
+        6, 
+        6
+      );
+    }
 
   }
 
