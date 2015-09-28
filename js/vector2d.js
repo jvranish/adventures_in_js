@@ -118,11 +118,12 @@ Vector2d.setupPrototype = function(f) {
   };
   f.prototype.lookupByDir = function(vectorDict) {
     var vectorDictClone = vectorDict.slice(0);
+    var obj = this;
     vectorDictClone.sort(function(a, b) {
-      var thisN = this.normalize();
+      var thisN = obj.normalize();
       var aN = a.key.normalize();
       var bN = b.key.normalize();
-      return thisN.dot(aN) - thisN.dot(bN);
+      return thisN.dot(bN) - thisN.dot(aN);
     });
     return vectorDictClone[0].value;
   };

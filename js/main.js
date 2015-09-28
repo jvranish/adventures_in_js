@@ -40,18 +40,16 @@ function main() {
 
   var canvas = document.getElementById("viewPort");
   var canvasBoundRect = canvas.getBoundingClientRect();
+  var t = 0;
 
   var context = canvas.getContext("2d");
   var player = new Character(new Vector2d(0, 0), RIGHT);
   var keyHandler = KeyHandler.setupHandlers(document, canvas);
   var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
 
-  var image = new Image();
-  image.src = './images/warrior.base.152.png';
-  var evergreen = new Image();
-  evergreen.src = './images/evergreens.png';
-  var grass = new Image();
-  grass.src = './images/grass1.png';
+  var playerImage = document.getElementById("warrior");
+  var evergreen = document.getElementById("evergreen");
+  var grass = document.getElementById("grass");
   //todo, add proper image loading delays
 
   var keyDirections = {
@@ -60,17 +58,6 @@ function main() {
     38: UP,
     40: DOWN
   };
-
-  var cardinalDirections = [
-    {key: new Vector2d(0,  -1), value: "n"},
-    {key: new Vector2d(1,  -1), value: "ne"},
-    {key: new Vector2d(1,   0), value: "e"},
-    {key: new Vector2d(1,   1), value: "se"},
-    {key: new Vector2d(0,   1), value: "s"},
-    {key: new Vector2d(-1,  1), value: "sw"},
-    {key: new Vector2d(-1,  0), value: "w"},
-    {key: new Vector2d(-1, -1), value: "nw"},
-  ];
 
   var tileImages = {
     0 : evergreen,
@@ -110,8 +97,7 @@ function main() {
         // console.log(worldPos.mod(mapSize));
       }
     });
-    var speed = 400;
-    var maxTravelDist = speed * dt;
+    var maxTravelDist = player.walkSpeed * dt;
 
     if (player.destinationPos)
     {
@@ -122,8 +108,7 @@ function main() {
         .sub(player.playerPos)
         .add(mapSize.scale(0.5))
         .mod(mapSize)
-        .sub(mapSize.scale(0.5))
-        .sub(new Vector2d(16, 16));
+        .sub(mapSize.scale(0.5));
       // console.log(displacement);
       var moveAmount = displacement.clipTo(maxTravelDist);
       player.playerPos = player.playerPos.add(moveAmount).mod(mapSize);
@@ -133,7 +118,7 @@ function main() {
       player.playerPos,
       new Vector2d(canvasSize.x, canvasSize.y),
       new Vector2d(canvasBoundRect.left, canvasBoundRect.top));
-
+ /// TODO fix canvas coord converter
 
     var canvasRect = new Rect(new Vector2d(0, 0), new Vector2d(canvasSize.x, canvasSize.y));
 
@@ -145,19 +130,23 @@ function main() {
       context.drawImage(tileImages[tile],canvasCoord.x,canvasCoord.y);
     });
 
-    var canvasplayer = coordConverter.worldToCanvas(player.playerPos);
-    context.drawImage(image,canvasplayer.x, canvasplayer.y);
-    if(player.playerPos.add(new Vector2d(16, 16)).equal(player.destinationPos)){
+
+    if(player.playerPos.equal(player.destinationPos)){
       player.destinationPos = null;
     } else if(player.destinationPos !== null){
       context.fillStyle = "#FF0000";
+      var redDotPos = coordConverter.worldToCanvas(player.destinationPos);
       context.fillRect(
-        coordConverter.worldToCanvas(player.destinationPos).x - 3, 
-        coordConverter.worldToCanvas(player.destinationPos).y - 3, 
+        redDotPos.x - 3, 
+        redDotPos.y - 3, 
         6, 
         6
       );
     }
+
+    var canvasplayer = coordConverter.worldToCanvas(player.playerPos).sub(Vector2d.fromScalar(64));
+    playerImage = player.currentSprite(t);
+    context.drawImage(playerImage,canvasplayer.x, canvasplayer.y);
 
   }
 
@@ -167,6 +156,7 @@ function main() {
     update(dt);
     render(dt);
     requestAnimationFrame(frame);
+    t += dt;
   }
   requestAnimationFrame(frame);
 }
