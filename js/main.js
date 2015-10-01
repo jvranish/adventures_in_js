@@ -7,20 +7,7 @@ function updateCanvasSize(doc, canvas) {
   return canvasSize;
 }
 
-function randomMap(width, height) {
-  var map = [];
-  for (var x = 0; x < width; x++) {
-    map[x] = [];
-    for (var y = 0; y < height; y++) {
-      map[x][y] = getRandomInt(0, 1);
-    }
-  }
-  return map;
-}
 
-
-var mapSizeTiles = new Vector2d(100, 100);
-var mapSize = mapSizeTiles.scale(32);
 
 function TimeDiffer() {
   this.last = window.performance.now();
@@ -38,14 +25,14 @@ function main() {
   var UP = new Vector2d(0, -1);
   var DOWN = new Vector2d(0, 1);
 
+  var world = new World(new Vector2d(100, 100));
+
   var canvas = document.getElementById("viewPort");
   var canvasBoundRect = canvas.getBoundingClientRect();
   var t = 0;
 
   var context = canvas.getContext("2d");
-  var player = new Character(new Vector2d(0, 0), RIGHT);
   var keyHandler = KeyHandler.setupHandlers(document, canvas);
-  var map = randomMap(mapSizeTiles.x, mapSizeTiles.y);
 
   var playerImage = document.getElementById("warrior");
   var evergreen = document.getElementById("evergreen");
@@ -76,7 +63,7 @@ function main() {
     context.fillRect(0, 0, canvasSize.x, canvasSize.y);
 
     var coordConverter = new CoordinateConverter(
-      player.playerPos,
+      world,
       new Vector2d(canvasSize.x, canvasSize.y),
       new Vector2d(canvasBoundRect.left, canvasBoundRect.top));
 
@@ -91,31 +78,28 @@ function main() {
       if (events.mouseButtonPressEvents[2])
       {
         var worldPos = coordConverter.canvasToWorld(events.mouseButtonPressEvents[2]);
-        player.setDestination(worldPos.mod(mapSize));
+        world.player.setDestination(worldPos);
         // console.log(events.mouseButtonPressEvents[2]);
         // console.log(worldPos);
-        // console.log(worldPos.mod(mapSize));
+        // console.log(worldPos.mod(world.mapSize));
       }
     });
-    var maxTravelDist = player.walkSpeed * dt;
+    var maxTravelDist = world.player.walkSpeed * dt;
 
-    if (player.destinationPos)
+    if (world.player.destinationPos)
     {
       // this is not exactly super intuitive, I'm going to try to make a generic TorusVector class
       // that can handle the wrap around more transparently.
-      var displacement = player
+      var displacement = world.player
         .destinationPos
-        .sub(player.playerPos)
-        .add(mapSize.scale(0.5))
-        .mod(mapSize)
-        .sub(mapSize.scale(0.5));
+        .sub(world.player.playerPos);
       // console.log(displacement);
       var moveAmount = displacement.clipTo(maxTravelDist);
-      player.playerPos = player.playerPos.add(moveAmount).mod(mapSize);
+      world.player.playerPos = world.player.playerPos.add(moveAmount);
     }
 
     var coordConverter = new CoordinateConverter(
-      player.playerPos,
+      world,
       new Vector2d(canvasSize.x, canvasSize.y),
       new Vector2d(canvasBoundRect.left, canvasBoundRect.top));
  /// TODO fix canvas coord converter
@@ -124,28 +108,28 @@ function main() {
 
     var tileGrid = canvasRect.map(function (v) { return coordConverter.canvasToTile(v); } ).outerCorners();
     tileGrid.eachGridPoint(function(tileCoord) {
-      var mapCoord = tileCoord.mod(mapSizeTiles);
-      var tile = map[mapCoord.x][mapCoord.y];
+      var mapCoord = tileCoord.mod(world.mapSizeTiles);;
+      var tile = world.map[mapCoord.x][mapCoord.y];
       var canvasCoord = coordConverter.tileToCanvas(tileCoord);
       context.drawImage(tileImages[tile],canvasCoord.x,canvasCoord.y);
     });
 
 
-    if(player.playerPos.equal(player.destinationPos)){
-      player.destinationPos = null;
-    } else if(player.destinationPos !== null){
+    if(world.player.playerPos.equal(world.player.destinationPos)){
+      world.player.destinationPos = null;
+    } else if(world.player.destinationPos !== null){
       context.fillStyle = "#FF0000";
-      var redDotPos = coordConverter.worldToCanvas(player.destinationPos);
+      var redDotPos = coordConverter.worldToCanvas(world.player.destinationPos);
       context.fillRect(
-        redDotPos.x - 3, 
-        redDotPos.y - 3, 
-        6, 
+        redDotPos.x - 3,
+        redDotPos.y - 3,
+        6,
         6
       );
     }
 
-    var canvasplayer = coordConverter.worldToCanvas(player.playerPos).sub(Vector2d.fromScalar(64));
-    playerImage = player.currentSprite(t);
+    var canvasplayer = coordConverter.worldToCanvas(world.player.playerPos).sub(Vector2d.fromScalar(64));
+    playerImage = world.player.currentSprite(t);
     context.drawImage(playerImage,canvasplayer.x, canvasplayer.y);
 
   }

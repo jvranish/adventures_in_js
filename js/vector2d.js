@@ -4,9 +4,6 @@ function Vector2d(x, y) {
   this.y = y;
 }
 
-Vector2d.fromScalar = function (scalar) {
-  return new Vector2d(scalar, scalar);
-};
 Vector2d.setupPrototype = function(f) {
   f.prototype.add = function (other) {
     return new this.constructor(this.x + other.x, this.y + other.y);
@@ -72,10 +69,10 @@ Vector2d.setupPrototype = function(f) {
     return f(this.x, this.y);
   };
   f.prototype.sum = function () {
-    return this.reduce(function(a, b) { return a + b; } );
+    return this.x + this.y;
   };
   f.prototype.dot = function (other) {
-    return this.mul(other).sum();
+    return (this.x * other.x) + (this.y * other.y);
   };
   f.prototype.magnitude = function () {
     return Math.sqrt(this.dot(this));
@@ -129,4 +126,8 @@ Vector2d.setupPrototype = function(f) {
   };
 };
 
+
+Vector2d.fromScalar = function (scalar) {
+  return new Vector2d(scalar, scalar);
+};
 Vector2d.setupPrototype(Vector2d);
