@@ -19,18 +19,6 @@ function randomMap(size) {
 
 function World(tileSize) {
   var world = this;
-  world.TorusVector2d = function (x, y) {
-    var modPos = new Vector2d(x, y)
-      .add(world.halfMapSize)
-      .mod(world.mapSize)
-      .sub(world.mapSize.scale(0.5));
-    this.x = modPos.x;
-    this.y = modPos.y;
-  }
-  world.TorusVector2d.fromScalar = function (scalar) {
-    return new world.TorusVector2d(scalar, scalar);
-  };
-  Vector2d.setupPrototype(world.TorusVector2d);
 
   world.mapSizeTiles = tileSize;
   world.mapSize = world.mapSizeTiles.scale(32);
@@ -41,6 +29,6 @@ function World(tileSize) {
 
   world.map = randomMap(world.mapSizeTiles);
 
-  world.player = new Character(new world.TorusVector2d(0, 0), RIGHT);
+  world.player = new Character(new Vector2d(0, 0), RIGHT);
 
 }
