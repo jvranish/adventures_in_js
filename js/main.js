@@ -25,6 +25,9 @@ function main() {
   var UP = new Vector2d(0, -1);
   var DOWN = new Vector2d(0, 1);
 
+  var data_content = document.getElementById("sprites_json");
+  var data = JSON.parse(data_content );
+
   var world = new World(new Vector2d(100, 100));
 
   var canvas = document.getElementById("viewPort");
@@ -34,7 +37,6 @@ function main() {
   var context = canvas.getContext("2d");
   var keyHandler = KeyHandler.setupHandlers(document, canvas);
 
-  var playerImage = document.getElementById("warrior");
   var evergreen = document.getElementById("evergreen");
   var grass = document.getElementById("grass");
   //todo, add proper image loading delays
@@ -129,8 +131,19 @@ function main() {
     }
 
     var canvasplayer = coordConverter.worldToCanvas(world.player.playerPos).sub(Vector2d.fromScalar(64));
-    playerImage = world.player.currentSprite(t);
-    context.drawImage(playerImage,canvasplayer.x, canvasplayer.y);
+    var playerImage = world.player.currentSprite(t);
+    var spriteSheet = playerImage.spriteSheet;
+    var frameName = playerImage.frameName;
+    var img = document.getElementById(playerImage.spriteSheet.meta.image);
+
+    var frame = spriteSheet.frames[frameName].frame;
+    var sourceSize = spriteSheet.frames[frameName].spriteSourceSize;
+    context.drawImage(img,
+                      frame.x, frame.y,
+                      frame.w, frame.h,
+                      canvasplayer.x + sourceSize.x - playerImage.centerOffset.x,
+                      canvasplayer.y + sourceSize.y - playerImage.centerOffset.y,
+                      sourceSize.w, sourceSize.h);
 
   }
 
