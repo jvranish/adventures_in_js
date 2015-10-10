@@ -1,0 +1,305 @@
+<html><head>
+<title>WebGL - Tiles Example</title>
+<script>
+
+/**
+ * Creates and compiles a shader.
+ *
+ * @param {!WebGLRenderingContext} gl The WebGL Context.
+ * @param {string} shaderSource The GLSL source code for the shader.
+ * @param {number} shaderType The type of shader, VERTEX_SHADER or
+ *     FRAGMENT_SHADER.
+ * @return {!WebGLShader} The shader.
+ */
+function compileShader(gl, shaderSource, shaderType) {
+  // Create the shader object
+  var shader = gl.createShader(shaderType);
+
+  // Set the shader source code.
+  gl.shaderSource(shader, shaderSource);
+
+  // Compile the shader
+  gl.compileShader(shader);
+
+  // Check if it compiled
+  var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  if (!success) {
+    // Something went wrong during compilation; get the error
+    throw "could not compile shader:" + gl.getShaderInfoLog(shader);
+  }
+
+  return shader;
+}
+
+/**
+ * Creates a shader from the content of a script tag.
+ *
+ * @param {!WebGLRenderingContext} gl The WebGL Context.
+ * @param {string} scriptId The id of the script tag.
+ * @param {string} opt_shaderType. The type of shader to create.
+ *     If not passed in will use the type attribute from the
+ *     script tag.
+ * @return {!WebGLShader} A shader.
+ */
+function createShaderFromScript(gl, scriptId, opt_shaderType) {
+  // look up the script tag by id.
+  var shaderScript = document.getElementById(scriptId);
+  if (!shaderScript) {
+    throw("*** Error: unknown script element" + scriptId);
+  }
+
+  // extract the contents of the script tag.
+  var shaderSource = shaderScript.text;
+
+  // If we didn't pass in a type, use the 'type' from
+  // the script tag.
+  if (!opt_shaderType) {
+    if (shaderScript.type == "x-shader/x-vertex") {
+      opt_shaderType = gl.VERTEX_SHADER;
+    } else if (shaderScript.type == "x-shader/x-fragment") {
+      opt_shaderType = gl.FRAGMENT_SHADER;
+    } else if (!opt_shaderType) {
+      throw("*** Error: shader type not set");
+    }
+  }
+
+  return compileShader(gl, shaderSource, opt_shaderType);
+};
+
+/**
+ * Creates a program from 2 shaders.
+ *
+ * @param {!WebGLRenderingContext) gl The WebGL context.
+ * @param {!WebGLShader} vertexShader A vertex shader.
+ * @param {!WebGLShader} fragmentShader A fragment shader.
+ * @return {!WebGLProgram} A program.
+ */
+function createProgram(gl, vertexShader, fragmentShader) {
+  // create a program.
+  var program = gl.createProgram();
+
+  // attach the shaders.
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+
+  // link the program.
+  gl.linkProgram(program);
+
+  // Check if it linked.
+  var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  if (!success) {
+      // something went wrong with the link
+      throw ("program filed to link:" + gl.getProgramInfoLog (program));
+  }
+
+  return program;
+};
+
+
+function randomInt(range) {
+  return Math.floor(Math.random() * range);
+}
+
+
+function main() {
+
+
+  var tilesSpritesheet = document.getElementById("mountain_landscape");
+  var canvas = document.getElementById("canvas");
+  var gl = canvas.getContext("experimental-webgl");
+
+  var x = 0;
+  var y = 0;
+  var width = 128;
+  var height = 128;
+
+  var currentlyPressedKeys = {};
+  function handleKeyDown(event) {
+      currentlyPressedKeys[event.keyCode] = true;
+  }
+  function handleKeyUp(event) {
+      currentlyPressedKeys[event.keyCode] = false;
+  }
+
+  document.onkeydown = handleKeyDown;
+  document.onkeyup = handleKeyUp;
+
+  function handleKeys() {
+      if (currentlyPressedKeys[37]) {
+          // Left cursor key
+          x -= 1;
+      }
+      if (currentlyPressedKeys[39]) {
+          // Right cursor key
+          x += 1;
+      }
+      if (currentlyPressedKeys[38]) {
+          // Up cursor key
+          y -= 1;
+      }
+      if (currentlyPressedKeys[40]) {
+          // Down cursor key
+          y += 1;
+      }
+  }
+
+
+   // setup GLSL program
+  vertexShader = createShaderFromScript(gl, "2d-vertex-shader");
+  fragmentShader = createShaderFromScript(gl, "2d-fragment-shader");
+  program = createProgram(gl, vertexShader, fragmentShader);
+  gl.useProgram(program);
+
+    // lookup uniforms
+  var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+  var translationLocation = gl.getUniformLocation(program, "u_translation");
+
+  // look up where the vertex data needs to go.
+  var positionLocation = gl.getAttribLocation(program, "a_position");
+  var texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+
+
+  // Create a texture.
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Set the parameters so we can render any size image.
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  // Upload the image into the texture.
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tilesSpritesheet);
+
+
+
+
+
+  var texCoordBuffer = gl.createBuffer();
+  // this sets "currently active buffer"
+  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+  // connects the "currently active buffer", to the texture location attribute
+  //  this attribute is only special because it's mentioned in one of our shaders
+  gl.enableVertexAttribArray(texCoordLocation);
+  // This specifies the data format for the data in the "currently active buffer"
+  // In this case, each "element" is 2 floats (for 12 elements total)
+  gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      // texture coordinates for verticies of first tile
+      64,  64,
+      96,  64,
+      64,  96,
+      64,  96,
+      96,  64,
+      96,  96,
+      // texture coordinates for verticies of second tile
+      128, 64,
+      96,  64,
+      128, 96,
+      128, 96,
+      96,  64,
+      96,  96]), gl.STATIC_DRAW);
+
+
+  var buffer = gl.createBuffer();
+  // this sets "currently active buffer"
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  // connects the "currently active buffer", to the vertex location attribute
+  //  this attribute is only special because it's mentioned in one of our shaders
+  gl.enableVertexAttribArray(positionLocation);
+  // This specifies the data format for the data in the "currently active buffer"
+  // In this case, each "element" is 2 floats (for 12 elements total)
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    // verticies for triangles for first tile
+     0,  0,
+     32, 0,
+     0, 32,
+     0, 32,
+     32, 0,
+     32, 32,
+    // verticies for triangles for second tile
+     32, 0,
+     64, 0,
+     32, 32,
+     32, 32,
+     64, 0,
+     64, 32,
+     ]), gl.STATIC_DRAW);
+
+  function render() {
+
+      // Clear the canvas.
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // set the resolution
+    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+
+    // Set the translation.
+    gl.uniform2fv(translationLocation, [x, y]);
+
+    // Draw the things! (the "12" is the number of "elements" (verticies in this case) )
+    gl.drawArrays(gl.TRIANGLES, 0, 12);
+  }
+
+
+
+  function tick() {
+    requestAnimationFrame(tick);
+    handleKeys();
+    render();
+  }
+  tick();
+}
+
+window.onload = main;
+
+
+</script>
+<!-- vertex shader -->
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+uniform vec2 u_resolution;
+uniform vec2 u_translation;
+
+varying vec2 v_texCoord;
+
+void main() {
+   // convert the coordinates from pixels to 0.0 to 1.0
+   vec2 zeroToOne = (a_position + u_translation) / u_resolution;
+
+   // convert from 0->1 to 0->2
+   vec2 zeroToTwo = zeroToOne * 2.0;
+
+   // convert from 0->2 to -1->+1 (clipspace)
+   vec2 clipSpace = zeroToTwo - 1.0;
+
+   gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+
+   // pass the texCoord to the fragment shader
+   // The GPU will interpolate this value between points.
+   v_texCoord = a_texCoord / 512.0; // scale by size of texture to again convert from pixesl to 0.0 to 1.0, but this time for the texture
+}
+</script>
+<!-- fragment shader -->
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// our texture
+uniform sampler2D u_image;
+
+// the texCoords passed in from the vertex shader.
+varying vec2 v_texCoord;
+
+void main() {
+   gl_FragColor = texture2D(u_image, v_texCoord);
+}
+</script></head>
+<body>
+  <h1>WebGL - Tiles Example</h1><canvas id="canvas" width="640" height="480"></canvas>
+  <img src="mountain_landscape_23.png" id="mountain_landscape" style="display: none;"/>
+</html>
+
