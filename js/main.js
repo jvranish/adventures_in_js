@@ -130,7 +130,6 @@ function main() {
       );
     }
 
-    var canvasplayer = coordConverter.worldToCanvas(world.player.playerPos).sub(Vector2d.fromScalar(64));
     var playerImage = world.player.currentSprite(t);
     var spriteSheet = playerImage.spriteSheet;
     var frameName = playerImage.frameName;
@@ -138,6 +137,8 @@ function main() {
 
     var frame = spriteSheet.frames[frameName].frame;
     var sourceSize = spriteSheet.frames[frameName].spriteSourceSize;
+
+    var canvasplayer = coordConverter.worldToCanvas(world.player.playerPos);
     context.drawImage(img,
                       frame.x, frame.y,
                       frame.w, frame.h,
