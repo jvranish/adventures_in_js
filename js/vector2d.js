@@ -126,8 +126,13 @@ Vector2d.setupPrototype = function(f) {
   };
 };
 
-
 Vector2d.fromScalar = function (scalar) {
   return new Vector2d(scalar, scalar);
 };
+
+Vector2d.rehydrate = function (obj) {
+  obj.__proto__ = Vector2d;
+  return obj;
+}
+
 Vector2d.setupPrototype(Vector2d);

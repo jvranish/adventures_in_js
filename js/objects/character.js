@@ -18,6 +18,16 @@ var Character = function(aPlayerPos, facingDir) {
   this.walkSpeed = 100.0;
 };
 
+Character.rehydrate = function(obj) {
+  Vector2d.rehydrate(obj.playerPos);
+  Vector2d.rehydrate(obj.facingDir);
+  if (this.destinationPos !== null) {
+    Vector2d.rehydrate(this.destinationPos);
+  }
+  obj.__proto__ = Character;
+  return obj;
+}
+
 Character.prototype.isWalking = function() {
   return (this.destinationPos !== null);
 };

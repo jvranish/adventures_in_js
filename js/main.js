@@ -21,15 +21,9 @@ TimeDiffer.prototype.deltaTime = function() {
 };
 
 function main() {
-  var LEFT = new Vector2d(-1, 0);
-  var RIGHT = new Vector2d(1, 0);
-  var UP = new Vector2d(0, -1);
-  var DOWN = new Vector2d(0, 1);
-
   var data_content = document.getElementById("sprites_json");
   var data = JSON.parse(data_content );
 
-  var world = new World(new Vector2d(100, 100), 12345);
 
   var canvas = document.getElementById("viewPort");
   var canvasBoundRect = canvas.getBoundingClientRect();
@@ -48,6 +42,7 @@ function main() {
   };
 
 
+  var world = new World(new Vector2d(100, 100), 12345);
   world.playerJoined(0);
   var currentPlayerId = 0;
 
@@ -76,7 +71,7 @@ function main() {
     var canvasSize = updateCanvasSize(document, canvas);
     context.fillStyle = "#FFFF00";
     context.fillRect(0, 0, canvasSize.x, canvasSize.y);
-    var currentPlayer = world.players[0];
+    var currentPlayer = world.players[currentPlayerId];
     var coordConverter = new CoordinateConverter(
       currentPlayer.playerPos,
       new Vector2d(canvasSize.x, canvasSize.y),

@@ -6,8 +6,14 @@ var UP = new Vector2d(0, -1);
 var DOWN = new Vector2d(0, 1);
 
 
+function arrayRehydrate(constructor, elems) {
+  for (key in elems) {
+    constructor.rehydrate(elems[key]);
+  }
+  return elems;
+}
 
-function World(tileSize, seed) {
+function World(tileSize, seed, mapSeed) {
   this.mapSizeTiles = tileSize;
   this.mapSize = this.mapSizeTiles.scale(32);
   this.prng = new ParkMillerRNG(seed);
@@ -16,35 +22,49 @@ function World(tileSize, seed) {
   // #TODO there is too much high-level initialization here,
   //   we should probably break this out into a class method
 
-  this.map = this.randomMap(this.mapSizeTiles);
+  this.mapSeed = 4321;
+  this.map = this.randomMap(this.mapSizeTiles, this.mapSeed);
 
   this.players = {};
 
 }
 
-World.prototype.randomMap = function(size) {
+World.prototype.randomMap = function(size, seed) {
   var map = [];
+  var prng = new ParkMillerRNG(seed);
   for (var x = 0; x < size.x; x++) {
     map[x] = [];
     for (var y = 0; y < size.y; y++) {
-      map[x][y] = this.prng.nextInt(0, 1);
+      map[x][y] = prng.nextInt(0, 1);
     }
   }
   return map;
 }
 
 World.prototype.getData = function() {
-  // return {
-  //   seed: this.prng.seed,
-  //   mapSize: this.mapSizem
-  //   mapSizeTiles: this.mapSizeTiles,
-  //   this.
-  // }
-  return this.players;
+  return {
+    seed: this.prng.seed,
+    mapSize: this.mapSize,
+    mapSizeTiles: this.mapSizeTiles,
+    mapSeed: this.mapSeed,
+    players: this.players,
+  };
 };
 
 World.prototype.setData = function(data) {
-  this.players = data;
+  this.prng.seed = data.seed;
+
+  this.mapSizeTiles = Vector2d.rehydrate(data.mapSizeTiles);
+  this.mapSize = Vector2d.rehydrate(data.mapSize);
+
+  //regenerate map if the seed is different
+  if (this.mapSeed !== data.mapSeed)
+  {
+    this.mapSeed = data.mapSeed;
+    this.map = randomMap(this.mapSizeTiles, data.mapSeed);
+  }
+
+  this.players = arrayRehydrate(Character, data.players);
 };
 
 World.prototype.getChecksum = function() {
