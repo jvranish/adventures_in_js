@@ -18,7 +18,10 @@ function randomMap(size, seed) {
   for (var x = 0; x < size.x; x++) {
     map[x] = [];
     for (var y = 0; y < size.y; y++) {
-      map[x][y] = prng.nextInt(0, 1);
+      map[x][y] = [];
+      map[x][y][0] = prng.nextInt(0, 255);
+      map[x][y][1] = prng.nextInt(0, 255);
+      map[x][y][2] = prng.nextInt(0, 255);
     }
   }
   return map;
@@ -51,17 +54,30 @@ function tileCoords(x, y, tileSize, tx, ty) {
            textureCoords: textureCoords};
 }
 
+function getTextureCoord(num) {  
+  var tx = num % 16;
+  var ty = Math.floor(num / 16);
+
+  return {x: tx, y: ty};
+}
 function mapCoords(size) {
+
+  var map = randomMap(new Vector2d(100, 100), 41684178641653156);
+
   var vertexCoords = [];
   var textureCoords = [];
   for (var x = 0; x < size.x; x++) {
     for (var y = 0; y < size.y; y++) {
       // getTileCoord(map[x][y]);
-      var tx = 3;
-      var ty = 4;
-      var things = tileCoords(x, y, new Vector2d(32, 32), tx, ty);
-      vertexCoords.push.apply(vertexCoords, things.vertexCoords);
-      textureCoords.push.apply(textureCoords, things.textureCoords);
+      // var tx = 3; p
+      // var ty = 4;
+      for(var z = 0; z < 3; z++) {
+        var texCoords = getTextureCoord(map[x][y][z]);
+        var things = tileCoords(x, y, new Vector2d(32, 32), texCoords.x, texCoords.y);
+        vertexCoords.push.apply(vertexCoords, things.vertexCoords);
+        textureCoords.push.apply(textureCoords, things.textureCoords);  
+      }
+      
     }
   }
   return { vertexCoords: vertexCoords,
