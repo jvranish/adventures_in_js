@@ -27,19 +27,28 @@ function main() {
 
   var canvas = document.getElementById("viewPort");
   var canvasBoundRect = canvas.getBoundingClientRect();
+  var gl = twgl.getWebGLContext(canvas);
+
   var t = 0;
 
-  var context = canvas.getContext("2d");
+  // var context = canvas.getContext("2d");
   var keyHandler = KeyHandler.setupHandlers(document, canvas);
 
-  var evergreen = document.getElementById("evergreen");
-  var grass = document.getElementById("grass");
-  //todo, add proper image loading delays
+
+  var programInfo = twgl.createProgramInfo(gl, ["2d-vertex-shader", "2d-fragment-shader"]);
 
   var tileImages = {
     0 : evergreen,
     1 : grass,
   };
+
+  var textures = twgl.createTextures(gl, {
+    "mountain_landscape":          { src: document.getElementById("mountain_landscape") },
+    "black-mage-spritesheet.png":  { src: document.getElementById("black-mage-spritesheet.png") },
+    "white-mage-spritesheet.png":  { src: document.getElementById("white-mage-spritesheet.png") },
+    "harrytheorc-spritesheet.png": { src: document.getElementById("harrytheorc-spritesheet.png") },
+    "greendwarf.png":              { src: document.getElementById("greendwarf.png") }
+  });
 
 
   var world = new World(new Vector2d(100, 100), 12345);

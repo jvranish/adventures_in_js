@@ -35,7 +35,7 @@ World.prototype.randomMap = function(size, seed) {
   for (var x = 0; x < size.x; x++) {
     map[x] = [];
     for (var y = 0; y < size.y; y++) {
-      map[x][y] = prng.nextInt(0, 1);
+      map[x][y] = prng.nextInt(0, 255);
     }
   }
   return map;
