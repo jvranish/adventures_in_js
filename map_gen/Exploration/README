@@ -1,0 +1,16 @@
+
+Exploration:
+
+    executable file:
+	
+	mainwindow.rb
+
+- this program translates the .tbm file into a 2D tile based exploration game.
+
+-Controls:
+	movement is with arrow keys or the number pad
+
+- to zoom out/in change the size of $Width and $Height in mainwindow.rb
+
+- currently there is no terrain cost for movement and speed is constant 
+	(to change this go to drawmap.rb, find the speed function and comment out the first return)

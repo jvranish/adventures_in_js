@@ -1,0 +1,151 @@
+
+					
+					if (e - lower.elevation).abs >= 2
+						if e < lower.elevation
+							#c1
+						elsif e > lower.elevation
+							#c5
+						end
+					end
+					if @new_map[i][j].type != "Cliff"
+					
+					end
+					
+					if left.type.includes? "Cliff"
+						#not a corner on the left
+					end
+					
+					if upper.type.includes? "Cliff"
+						#
+					end
+					
+					if (e - right.elevation).abs >= 2
+						if e < right.elevation
+							#c3
+						elsif e > right.elevation
+							#c7
+						end
+					end
+					
+					
+					for t in info
+						e = @new_map[i][j].elevation
+						count = 0
+						#make sure that the difference in elevation between the current tile and the adjacent tiles is not greater than 2 
+						#otherwise set the difference to 2 (this could be made more efficient, currently we will recheck tiles)
+						#!don't change the current elevation! 
+						if (e - t.elevation).abs > 2
+							#smooth elevations
+							if e < t.elevation
+								t.elevation = e + 2
+							else
+								t.elevation = e - 2
+							end
+							@new_map[i][j].type += ":cliff_"+ t.position.to_s
+							count+=1
+						end
+						
+						#assign cliff if the tile next to it is *not* a cliff
+						#positions are designated as follows: zero is current tile (e)
+						# 8 1 2
+						# 7 0 3
+						# 6 5 4
+						if count == 1
+						
+						elsif count > 1
+							
+						
+						end
+					end 	
+					
+					
+					
+	def analyzeInfo(info)
+	
+	end
+	
+	def getSurroundingNodesInfo(x, y)
+		temp_a = Array.new
+		for i in (x-1..x+1)
+			for j in (y-1..y+1)
+				if (i >= 0 and j >= 0 and i < @rows and j < @rows)
+					if (@new_map[i][j].elevation != -1)
+						temp_a.push(@info_struct.new find_angle(x, y, i, j), @new_map[i][j].elevation)
+					else
+						temp_a.push(0, @new_map[i][j].elevation)
+					end
+				end
+			end
+		end
+		return temp_a
+	end
+	# 8 1 2
+	# 7 0 3
+	# 6 5 4
+	def find_angle(x1, y1, x2, y2)
+		x = x1
+		y = y1 - Math.sqrt((x2 - x1).abs * (x2 - x1).abs + (y2 - y1).abs * (y2 - y1).abs)
+		angle = (2 * Math.atan2(y2 - y, x2 - x)) * 180 / PI
+		angle = ((angle+22.5)/45 + 1).to_i
+		if angle > 8
+			angle = 1
+		elsif angle < 1
+			angle = 8
+		end
+		return angle
+	end
+	
+	
+	
+	
+	
+			elsif (e == 5)
+				case switch		
+					when (0..80)
+						special = "Stone"
+					when (80..100)
+						special = "Tree2"
+				end
+			elsif (e == 6)
+				case switch		
+					when (0..30)
+						special = "Stone"
+					when (30..100)
+						special = "Tree2"
+				end
+			elsif (e >= 7)			
+				case switch		
+					when (0..90)
+						special = "Stone"
+					when (90..95)
+						special = "Tree1"
+					when (95..100)
+						special = "Tree2"
+				end
+				
+				
+				
+				
+					#extra condition for if c5 and c3 are lower but c4 is the same
+					elsif e >= 4 && c5.elevation < 4 && c4.elevation >= 4 && c3.elevation < 4
+						@new_map[n+1][m+1].elevation = @map[i][j].elevation
+						@new_map[n+1][m+1].type = "Cliff2a"
+						@new_map[n+1][m+1].offset = [0,1]
+						createCliff(n+1, m+1, 2, 2)
+						@new_map[n+1][m+1].elevation = @map[i][j].elevation
+						@new_map[n+1][m+1].type = "Cliff6a"
+						@new_map[n+1][m+1].offset = [1,0]
+						createCliff(n+1, m+1, 2, 3)
+						
+						
+						
+					#extra condition for if c1 and c3 are lower but c2 is the same
+					elsif e >= 4 && c1.elevation < 4 && c2.elevation >= 4 && c3.elevation < 4
+						@new_map[n][m+1].elevation = @map[i][j].elevation
+						@new_map[n][m+1].type = "Cliff4a"
+						@new_map[n][m+1].offset = [0,0]
+						createCliff(n+2, m+1, 2, 3)
+						@new_map[n+1][m].elevation = @map[i][j].elevation
+						@new_map[n+1][m].type = "Cliff8a"
+						@new_map[n+1][m].offset = [0,0]
+						createCliff(n+1, m+2, 2, 2)
