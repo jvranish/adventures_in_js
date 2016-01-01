@@ -2,29 +2,74 @@
   <head>
     <title>Adventures In JS</title>
     <script>"use strict";</script>
+    <script id="2d-vertex-shader" type="x-shader/x-vertex">
+      attribute vec2 vertexCoords; 
+      attribute vec2 textureCoords; 
+       
+      uniform vec2 resolution; 
+      uniform vec2 translation; 
+       
+      varying vec2 v_texCoord; 
+       
+      void main() { 
+         // convert the coordinates from pixels to 0.0 to 1.0 
+         vec2 zeroToOne = (vertexCoords + translation) / resolution; 
+       
+         // convert from 0->1 to 0->2 
+         vec2 zeroToTwo = zeroToOne * 2.0; 
+       
+         // convert from 0->2 to -1->+1 (clipspace) 
+         vec2 clipSpace = zeroToTwo - 1.0; 
+       
+         gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1); 
+       
+         // pass the texCoord to the fragment shader 
+         // The GPU will interpolate this value between points. 
+         v_texCoord = textureCoords / 512.0; // scale by size of texture to again convert from pixesl to 0.0 to 1.0, but this time for the texture 
+      }
+    </script>
+    <script id="2d-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+      // our texture
+      uniform sampler2D image;
+      // the texCoords passed in from the vertex shader.
+      varying vec2 v_texCoord;
+
+      void main() {
+         gl_FragColor = texture2D(image, v_texCoord);
+      }
+    </script>
     <script type="text/javascript" src="./js/lib/twgl.js"></script>
     <script type="text/javascript" src="./js/lib/park_miller_rng.js"></script>
     <script type="text/javascript" src="./js/lib/utils.js"></script>
     <script type="text/javascript" src="./js/lib/vector2d.js"></script>
-    <script type="text/javascript" src="./js/map/world.js"></script>
     <script type="text/javascript" src="./js/characters/character.js"></script>
-    <script type="text/javascript" src="./js/lib/rect.js"></script>
-    <script type="text/javascript" src="./js/gui/input.js"></script>
+    <script type="text/javascript" src="./js/graphics/gl_info.js"></script>
+    <script type="text/javascript" src="./js/gui/inputs.js"></script>
     <script type="text/javascript" src="./js/map/coordinates.js"></script>
+    <script type="text/javascript" src="./js/map/mapFile.js"></script>
+    <script type="text/javascript" src="./js/map/map.js"></script>
+    <script type="text/javascript" src="./js/map/world.js"></script>
+    <script type="text/javascript" src="./js/local_game_state.js"></script>
     <script type="text/javascript" src="./js/main.js"></script>
-    <script type="text/javascript" src="./sprites.js"></script>
-    <script type="text/javascript" src="./sprites/black-mage-spritesheet.js"></script>
-    <script type="text/javascript" src="./sprites/white-mage-spritesheet.js"></script>
-    <script type="text/javascript" src="./sprites/harrytheorc-spritesheet.js"></script>
-    <script type="text/javascript" src="./sprites/greendwarf-spritesheet.js"></script>
   </head>
-  <body onload="main()" style="margin: 0;">
-    <canvas id="viewPort"></canvas>
+  <body onload="main()" style="margin: 0px; padding: 0px;">
+    <div>
+      <h1 style="float: left">WebGL - Tiles Example</h1>
+      <h1 style="float: left; margin-left: 10px;">X: <span id="x-pos"></span></h1>
+      <h1 style="float: left; margin-left: 10px;">Y: <span id="y-pos"></span></h1>
+      <div style="clear: both;">
+      </div>
+    </div>
+
+    <canvas id="canvas" style="width: 100%; height: 100%;"></canvas>
+    <img src="mountain_landscape_23.png" id="mountain_landscape" style="display: none;"/>
+    <!--<canvas id="viewPort"></canvas>
     <img src="./images/grass1.png" id="grass" style="display: none;"/>
     <img src="./images/evergreens.png" id="evergreen" style="display: none;"/>
     <img src="./sprites/black-mage-spritesheet.png" id="black-mage-spritesheet.png" style="display: none;"/>
     <img src="./sprites/white-mage-spritesheet.png" id="white-mage-spritesheet.png" style="display: none;"/>
     <img src="./sprites/harrytheorc-spritesheet.png" id="harrytheorc-spritesheet.png" style="display: none;"/>
-    <img src="./sprites/greendwarf.png" id="greendwarf.png" style="display: none;"/>
+    <img src="./sprites/greendwarf.png" id="greendwarf.png" style="display: none;"/>-->
   </body>
 </html>
