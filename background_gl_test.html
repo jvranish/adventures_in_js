@@ -1,87 +1,50 @@
 <html><head>
 <title>WebGL - Tiles Example</title>
-<script type="text/javascript" src="./js/twgl.js"></script>
-<script type="text/javascript" src="./js/park_miller_rng.js"></script>
-<script type="text/javascript" src="./js/utils.js"></script>
-<script type="text/javascript" src="./js/vector2d.js"></script>
+<script type="text/javascript" src="./js/lib/twgl.js"></script>
+<script type="text/javascript" src="./js/lib/park_miller_rng.js"></script>
+<script type="text/javascript" src="./js/lib/utils.js"></script>
+<script type="text/javascript" src="./js/lib/vector2d.js"></script>
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+  attribute vec2 vertexCoords; 
+  attribute vec2 textureCoords; 
+   
+  uniform vec2 resolution; 
+  uniform vec2 translation; 
+   
+  varying vec2 v_texCoord; 
+   
+  void main() { 
+     // convert the coordinates from pixels to 0.0 to 1.0 
+     vec2 zeroToOne = (vertexCoords + translation) / resolution; 
+   
+     // convert from 0->1 to 0->2 
+     vec2 zeroToTwo = zeroToOne * 2.0; 
+   
+     // convert from 0->2 to -1->+1 (clipspace) 
+     vec2 clipSpace = zeroToTwo - 1.0; 
+   
+     gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1); 
+   
+     // pass the texCoord to the fragment shader 
+     // The GPU will interpolate this value between points. 
+     v_texCoord = textureCoords / 512.0; // scale by size of texture to again convert from pixesl to 0.0 to 1.0, but this time for the texture 
+  }
+</script>
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+  precision mediump float;
+  // our texture
+  uniform sampler2D image;
+  // the texCoords passed in from the vertex shader.
+  varying vec2 v_texCoord;
+
+  void main() {
+     gl_FragColor = texture2D(image, v_texCoord);
+  }
+</script>
+
 <script>
-
-
 function randomInt(range) {
   return Math.floor(Math.random() * range);
-}
-
-
-function randomMap(size, seed) {
-  var map = [];
-  var prng = new ParkMillerRNG(seed);
-  for (var x = 0; x < size.x; x++) {
-    map[x] = [];
-    for (var y = 0; y < size.y; y++) {
-      map[x][y] = [];
-      map[x][y][0] = prng.nextInt(0, 255);
-      map[x][y][1] = prng.nextInt(0, 255);
-      map[x][y][2] = prng.nextInt(0, 255);
-    }
-  }
-  return map;
-}
-
-
-
-function tileCoords(x, y, tileSize, tx, ty) {
-  // verticies
-  var a = [x * tileSize.x, y * tileSize.y];
-  var b = [x * tileSize.x + tileSize.x, y * tileSize.y];
-  var c = [x * tileSize.x, y * tileSize.y + tileSize.y];
-  var d = [x * tileSize.x + tileSize.x, y * tileSize.y + tileSize.y];
-  // texture coords
-  var ta = [tx * tileSize.x, ty * tileSize.y];
-  var tb = [tx * tileSize.x + tileSize.x, ty * tileSize.y];
-  var tc = [tx * tileSize.x, ty * tileSize.y + tileSize.y];
-  var td = [tx * tileSize.x + tileSize.x, ty * tileSize.y + tileSize.y];
-  // var vertexCoords = [].concat(a, b, c,
-  //                     c, b, d);
-  // var textureCoords = [].concat(ta, tb, tc,
-  //                      tc, tb, td);
-
-  var vertexCoords = [].concat(a, c, b,
-                      c, d, b);
-  var textureCoords = [].concat(ta, tc, tb,
-                       tc, td, tb);
-
-  return { vertexCoords: vertexCoords,
-           textureCoords: textureCoords};
-}
-
-function getTextureCoord(num) {  
-  var tx = num % 16;
-  var ty = Math.floor(num / 16);
-
-  return {x: tx, y: ty};
-}
-function mapCoords(size) {
-
-  var map = randomMap(new Vector2d(100, 100), 41684178641653156);
-
-  var vertexCoords = [];
-  var textureCoords = [];
-  for (var x = 0; x < size.x; x++) {
-    for (var y = 0; y < size.y; y++) {
-      // getTileCoord(map[x][y]);
-      // var tx = 3; p
-      // var ty = 4;
-      for(var z = 0; z < 3; z++) {
-        var texCoords = getTextureCoord(map[x][y][z]);
-        var things = tileCoords(x, y, new Vector2d(32, 32), texCoords.x, texCoords.y);
-        vertexCoords.push.apply(vertexCoords, things.vertexCoords);
-        textureCoords.push.apply(textureCoords, things.textureCoords);  
-      }
-      
-    }
-  }
-  return { vertexCoords: vertexCoords,
-           textureCoords: textureCoords};
 }
 
 function main() {
@@ -184,47 +147,7 @@ window.onload = main;
 
 
 </script>
-<!-- vertex shader -->
-<script id="2d-vertex-shader" type="x-shader/x-vertex">
-attribute vec2 vertexCoords;
-attribute vec2 textureCoords;
-
-uniform vec2 resolution;
-uniform vec2 translation;
-
-varying vec2 v_texCoord;
-
-void main() {
-   // convert the coordinates from pixels to 0.0 to 1.0
-   vec2 zeroToOne = (vertexCoords + translation) / resolution;
-
-   // convert from 0->1 to 0->2
-   vec2 zeroToTwo = zeroToOne * 2.0;
-
-   // convert from 0->2 to -1->+1 (clipspace)
-   vec2 clipSpace = zeroToTwo - 1.0;
-
-   gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
-
-   // pass the texCoord to the fragment shader
-   // The GPU will interpolate this value between points.
-   v_texCoord = textureCoords / 512.0; // scale by size of texture to again convert from pixesl to 0.0 to 1.0, but this time for the texture
-}
-</script>
-<!-- fragment shader -->
-<script id="2d-fragment-shader" type="x-shader/x-fragment">
-precision mediump float;
-
-// our texture
-uniform sampler2D image;
-
-// the texCoords passed in from the vertex shader.
-varying vec2 v_texCoord;
-
-void main() {
-   gl_FragColor = texture2D(image, v_texCoord);
-}
-</script></head>
+</head>
 <body>
   <h1>WebGL - Tiles Example</h1><canvas id="canvas" width="640" height="480"></canvas>
   <img src="./sprites/mountain_landscape_23.png" id="mountain_landscape" style="display: none;"/>

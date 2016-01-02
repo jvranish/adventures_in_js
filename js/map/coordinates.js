@@ -1,31 +1,43 @@
 "use strict";
 
-function CoordinateConverter(playerPos, canvasSize, canvasTopLeft) {
-    this.playerPos = playerPos;
-    this.canvasSize = canvasSize;
-    this.canvasTopLeft = canvasTopLeft
+//Canvas is posiition offset world pixel coordinates
+//World is standard x,y pixel coordinates
+//Tile is tile coordinates
+
+
+function CoordinateConverter(viewPortPosition, canvas) {
+    this.viewPortPosition = viewPortPosition;
+    this.canvas = canvas;
+    var canvasBoundRect = this.canvas.getBoundingClientRect();
+    this.canvasTopLeft = new Vector2d(canvasBoundRect.left, canvasBoundRect.top);
+}
+
+CoordinateConverter.prototype.update = function(viewPortPosition) {
+  this.viewPortPosition = viewPortPosition;
+  var canvasBoundRect = this.canvas.getBoundingClientRect();
+  this.canvasTopLeft = new Vector2d(canvasBoundRect.left, canvasBoundRect.top); 
 }
 
 CoordinateConverter.prototype.worldToCanvas = function(worldCoord)
 {
-  // playerPos is in units of pixels so just need offset
-  var canvasCenterInWorld = this.playerPos;
-  var canvasCenterInCanvas = new Vector2d(this.canvasSize.x, this.canvasSize.y).scale(0.5);
+  // viewPortPosition is in units of pixels so just need offset
+  var canvasCenterInWorld = this.viewPortPosition;
+  var canvasCenterInCanvas = new Vector2d(canvas.width, canvas.height).scale(0.5);
   var canvasOriginInWorld = canvasCenterInWorld.sub(canvasCenterInCanvas);
   var canvasPos = worldCoord.sub(canvasOriginInWorld);
   return canvasPos;
 }
 CoordinateConverter.prototype.canvasToWorld = function(canvasCoord)
 {
-  // playerPos is in units of pixels so just need offset
-  var canvasCenterInWorld = this.playerPos;
-  var canvasCenterInCanvas = new Vector2d(this.canvasSize.x, this.canvasSize.y).scale(0.5);
+  // viewPortPosition is in units of pixels so just need offset
+  var canvasCenterInWorld = this.viewPortPosition;
+  var canvasCenterInCanvas = new Vector2d(canvas.width, canvas.height).scale(0.5);
   return canvasCenterInWorld.add(canvasCoord).sub(canvasCenterInCanvas);
 }
 
 CoordinateConverter.prototype.worldToTile = function(worldCoord)
 {
-  // tile coords are same as playerPos, but just scaled by 32
+  // tile coords are same as viewPortPosition, but just scaled by 32
   return worldCoord.scale(1/32) //.mod(this.world.mapSizeTiles);
 }
 CoordinateConverter.prototype.tileToWorld = function(tileCoord)
@@ -49,5 +61,5 @@ CoordinateConverter.prototype.mouseToCanvas = function(mousePos)
 }
 CoordinateConverter.prototype.mouseToWorld = function(mousePos)
 {
-  return canvasToWorld(mouseToCanvas(mousePos));
+  return this.canvasToWorld(this.mouseToCanvas(mousePos));
 }
