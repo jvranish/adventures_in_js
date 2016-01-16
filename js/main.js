@@ -1,4 +1,13 @@
 "use strict";
+
+function updateCanvasSize(doc, canvas) {
+  var canvasSize = new Vector2d(doc.body.clientWidth,
+                                doc.body.clientHeight);
+  canvas.width = canvasSize.x;
+  canvas.height = canvasSize.y;
+  return canvasSize;
+}
+
 function main() {
   function init() {
     var canvas = document.getElementById("canvas");
@@ -72,6 +81,7 @@ function main() {
   // var currentPlayerId = 0;
 
   function update(dt, gameState) {
+    updateCanvasSize(document, gameState.glInfo.gl.canvas);
     //var canvasSize = updateCanvasSize(document, canvas);
     //var currentPlayer = world.players[currentPlayerId];
     // var coordConverter = new CoordinateConverter(
@@ -89,7 +99,11 @@ function main() {
     var guiInputs = gameState.inputs.getInputs();
 
     if(typeof(guiInputs.mouseEvents.rightClick) != "undefined") {
-      gameState.localPlayer.playerPos = guiInputs.mouseEvents.rightClick.mapPosition;
+      // console.log("right click!");
+      console.log(guiInputs.mouseEvents.rightClick.mapPosition);
+      // gameState.localPlayer.playerPos = guiInputs.mouseEvents.rightClick.mapPosition;
+      // var worldPos = coordConverter.canvasToWorld(events.mouseButtonPressEvents[2]);
+      gameState.world.incomingEvent(0, { newDestination: guiInputs.mouseEvents.rightClick.mapPosition });
       document.getElementById('x-pos').innerHTML = gameState.localPlayer.playerPos.x / 32;
       document.getElementById('y-pos').innerHTML = gameState.localPlayer.playerPos.y / 32;
     }
@@ -100,8 +114,10 @@ function main() {
     gameState.world.update(dt);
   }
   
-  function render(dt, gameState) {
+  function render(dt, gameState, time) {
     gameState.glInfo.renderMap();
+    gameState.glInfo.renderCharacters(gameState.world, time);
+
     //var canvasSize = updateCanvasSize(document, canvas);
     //context.fillStyle = "#FFFF00";
     //context.fillRect(0, 0, canvasSize.x, canvasSize.y);
@@ -172,13 +188,14 @@ function main() {
 
   }
 
-  function frame(gameState, time) {
-    var dt = gameState.inputs.updateTime(time);
+  function frame(gameState, t) {
+    var dt = gameState.inputs.updateTime(t);
+    console.log(dt);
     update(dt, gameState);
-    render(dt, gameState);
+    render(dt, gameState, t);
 
-    requestAnimationFrame(function(time) {
-      frame(gameState, time);
+    requestAnimationFrame(function(t1) {
+      frame(gameState, t1/1000.0);
     });
   }
 

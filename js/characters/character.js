@@ -51,15 +51,16 @@ Character.prototype.currentAction = function() {
   }
 }
 
-Character.prototype.currentSprite = function(t) {
+Character.prototype.currentSprite = function(t, frameOffsets) {
   var dir = this.facingCardinalDirection();
   var action = this.currentAction();
-  var sprite_data = sprites_data["white-mage"][action];
+  var sprite_data = sprites_data["black-mage"][action];
   var animationSpeed = sprite_data.base_framerate + (sprite_data.motion_framerate_factor * this.walkSpeed);
   // TODO this should be based on the _start time_ of the animation
   var currentFrame = Math.round(t * animationSpeed) % sprite_data.num_frames;
-  var frameName = action + "/white-mage." + action + "." + dir + "." + (new Array(4 - currentFrame.toString().length + 1).join("0") + currentFrame.toString()) + ".png";
-  return { "frameName": frameName,
-           "spriteSheet": white_mage_spritesheet,
+  var frameOffset = frameOffsets["black-mage"][action][dir][currentFrame];
+  // var frameName = action + "/white-mage." + action + "." + dir + "." + (new Array(4 - currentFrame.toString().length + 1).join("0") + currentFrame.toString()) + ".png";
+  return { "frameOffset": frameOffset,
+           // "spriteSheet": white_mage_spritesheet,
            "centerOffset": sprite_data.center_offset};
 };

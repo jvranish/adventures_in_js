@@ -13,10 +13,18 @@ function GlInfo(canvas, tileGrid, coordConverter) {
     textureCoords: { numComponents: 2, data: mapArrays.textureCoords},
   });
 
+  this.spriteBufferInfo = twgl.createBufferInfoFromArrays(this.gl, {
+    vertexCoords: { numComponents: 2, data: sprites.vertexCoords},
+    textureCoords: { numComponents: 2, data: sprites.textureCoords},
+  });
+
+
   var tilesSpritesheet = document.getElementById("mountain_landscape");
+  var spritesheet = document.getElementById("black-mage-spritesheet.png");
 
   this.textures = twgl.createTextures(this.gl, {
-    tiles: { src: tilesSpritesheet }
+    tiles: { src: tilesSpritesheet },
+    sprites: { src: spritesheet },
   });
 }
 
@@ -35,19 +43,45 @@ GlInfo.prototype.renderMap = function() {
 
   this.gl.enable(this.gl.BLEND);
   this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
-  // this.gl.disable(this.gl.DEPTH_TEST);
+  this.gl.disable(this.gl.DEPTH_TEST);
 
   this.gl.useProgram(this.programInfo.program);
   twgl.setBuffersAndAttributes(this.gl, this.programInfo, this.mapBufferInfo);
   twgl.setUniforms(this.programInfo, {
-    translation: [this.translation.x, this.translation.y],
+    translation: [Math.round(this.translation.x), Math.round(this.translation.y)],
     resolution: [this.gl.canvas.width, this.gl.canvas.height],
+    textureSize: [512, 512],
     image: this.textures.tiles
   });
   twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, this.mapBufferInfo);
 
   this.gl.disable(this.gl.BLEND);
-  // this.gl.enable(this.gl.DEPTH_TEST);
+  this.gl.enable(this.gl.DEPTH_TEST);
+}
+
+GlInfo.prototype.renderCharacters = function (world, t) {
+
+  this.gl.enable(this.gl.BLEND);
+  this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+
+  for (var player_id in world.players)
+  {
+    var player = world.players[player_id];
+    var playerImage = player.currentSprite(t, sprites["frameOffsets"]);
+    var frameOffset = playerImage.frameOffset;
+    var canvasplayer = this.coordConverter.worldToCanvas(player.playerPos);
+
+    twgl.setBuffersAndAttributes(this.gl, this.programInfo, this.spriteBufferInfo);
+    twgl.setUniforms(this.programInfo, {
+      translation: [canvasplayer.x - playerImage.centerOffset.x, canvasplayer.y - playerImage.centerOffset.y],
+      resolution: [this.gl.canvas.width, this.gl.canvas.height],
+      textureSize: [1212, 1995],
+      image: this.textures.sprites
+    });
+    twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, this.spriteBufferInfo, 6, playerImage.frameOffset * 6);
+
+  }
+  this.gl.disable(this.gl.BLEND);
 }
 
 GlInfo.prototype.generateTileGlCoords = function(x, y, tx, ty) {
@@ -92,7 +126,7 @@ GlInfo.prototype.generateMapGlCoords = function(tileGrid) {
         var texCoords = this.getTextureCoord(tileGrid[x][y][z]);
         var tileCoords = this.generateTileGlCoords(x, y, texCoords.x, texCoords.y);
         vertexCoords.push.apply(vertexCoords, tileCoords.vertexCoords);
-        textureCoords.push.apply(textureCoords, tileCoords.textureCoords);  
+        textureCoords.push.apply(textureCoords, tileCoords.textureCoords);
       }
     }
   }

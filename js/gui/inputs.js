@@ -19,7 +19,8 @@ function Inputs(doc, canvas, coordConverter) {
 }
 
 Inputs.prototype.updateTime = function(currentTime) {
-  var dt = (currentTime - this.time) / 1000;
+  var dt = (currentTime - this.time);
+  this.time = currentTime;
   return dt;
 }
 

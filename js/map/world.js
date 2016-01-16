@@ -102,12 +102,16 @@ World.prototype.update = function(dt) {
       else {
         // this is not exactly super intuitive, I'm going to try to make a generic TorusVector class
         // that can handle the wrap around more transparently.
+        // dis = dest - p 
+        //  
         var displacement = character
           .destinationPos
           .sub(character.playerPos);
         // console.log(displacement);
         var moveAmount = displacement.clipTo(maxTravelDist);
         character.playerPos = character.playerPos.add(moveAmount);
+        // console.log(character
+        //   .destinationPos);
       }
     }
   }
