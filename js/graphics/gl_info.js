@@ -1,3 +1,5 @@
+
+
 function GlInfo(canvas, tileGrid, coordConverter) {
   this.tileSize = new Vector2d(32, 32);
   this.coordConverter = coordConverter;
@@ -18,14 +20,81 @@ function GlInfo(canvas, tileGrid, coordConverter) {
     textureCoords: { numComponents: 2, data: sprites.textureCoords},
   });
 
+  this.fireSprite = this.loadSprite("Fire01.png", 8, 4);
+
 
   var tilesSpritesheet = document.getElementById("mountain_landscape");
   var spritesheet = document.getElementById("black-mage-spritesheet.png");
-
+  // var fireSprites = document.getElementById("Fire01.png");
+  // debugger;
   this.textures = twgl.createTextures(this.gl, {
     tiles: { src: tilesSpritesheet },
     sprites: { src: spritesheet },
+    // fileSprites: { src: fireSprites },
   });
+}
+
+GlInfo.prototype.quadCoords = function(rect) {
+  var a = [rect.x, rect.y];
+  var b = [rect.x + rect.w, rect.y];
+  var c = [rect.x, rect.y + rect.h];
+  var d = [rect.x + rect.w, rect.y + rect.h];
+  //a c b
+  //b c d
+  return a.concat(c).concat(b).concat(b).concat(c).concat(d);
+}
+
+GlInfo.prototype.loadSprite = function(filename, nw, nh) {
+  var textureCoords = [];
+  var vertexCoords = [];
+
+  var sprites = document.getElementById(filename);
+  var texture = twgl.createTexture(this.gl, { src: sprites} );
+  var spriteWidth = sprites.naturalWidth / nw;
+  var spriteHeight = sprites.naturalHeight / nh;
+  for (var i = 0; i < nw; i++) {
+    for (var j = 0; j < nh; j++) {
+      var txRect = {
+        x: i * spriteWidth,
+        y: i * spriteHeight,
+        w: spriteWidth,
+        h: spriteHeight,
+      };
+      var vxRect = {
+        x: 0,
+        y: 0,
+        w: spriteWidth,
+        h: spriteHeight,
+      };
+      textureCoords = textureCoords.concat(this.quadCoords(txRect));
+      vertexCoords = vertexCoords.concat(this.quadCoords(vxRect));
+    }
+  }
+  var spriteBufferInfo = twgl.createBufferInfoFromArrays(this.gl, {
+    vertexCoords: { numComponents: 2, data: vertexCoords},
+    textureCoords: { numComponents: 2, data: textureCoords},
+  });
+  return {
+    bufferInfo: spriteBufferInfo,
+    texture: texture,
+    frames: nw * nh,
+  };
+}
+
+GlInfo.prototype.drawSprite = function(sprite, frame, x, y) {
+  this.gl.enable(this.gl.BLEND);
+  this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+
+  twgl.setBuffersAndAttributes(this.gl, this.programInfo, sprite.bufferInfo);
+  twgl.setUniforms(this.programInfo, {
+    translation: [x, y],
+    resolution: [this.gl.canvas.width, this.gl.canvas.height],
+    textureSize: [1024, 1024],
+    image: sprite.texture
+  });
+  twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, sprite.bufferInfo, 6, (Math.round(frame) % sprite.frames) * 6);
+
+  this.gl.disable(this.gl.BLEND);
 }
 
 GlInfo.prototype.update = function() {
@@ -104,13 +173,13 @@ GlInfo.prototype.generateTileGlCoords = function(x, y, tx, ty) {
                       b, c, d);
   var textureCoords = [].concat(ta, tc, tb,
                       tb, tc, td);
-  return { 
+  return {
     vertexCoords: vertexCoords,
     textureCoords: textureCoords
   };
 }
 
-GlInfo.prototype.getTextureCoord = function(num) {  
+GlInfo.prototype.getTextureCoord = function(num) {
   var tx = num % 16;
   var ty = Math.floor(num / 16);
 
@@ -131,7 +200,7 @@ GlInfo.prototype.generateMapGlCoords = function(tileGrid) {
     }
   }
 
-  return { 
+  return {
     vertexCoords: vertexCoords,
     textureCoords: textureCoords
   };

@@ -117,6 +117,7 @@ function main() {
   function render(dt, gameState, time) {
     gameState.glInfo.renderMap();
     gameState.glInfo.renderCharacters(gameState.world, time);
+    gameState.glInfo.drawSprite(gameState.glInfo.fireSprite, time*50, 100, 100);
 
     //var canvasSize = updateCanvasSize(document, canvas);
     //context.fillStyle = "#FFFF00";
@@ -190,7 +191,7 @@ function main() {
 
   function frame(gameState, t) {
     var dt = gameState.inputs.updateTime(t);
-    console.log(dt);
+    // console.log(dt);
     update(dt, gameState);
     render(dt, gameState, t);
 
