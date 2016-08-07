@@ -75,6 +75,7 @@
       var lower = size - r + buffer;
       var upper = size + r + buffer;
       for (var j = 0; j < n; j++) {
+        var attemptCount = 0;
         do {
           var x = getRandomInt(buffer, dim.x - upper);
           var y = getRandomInt(buffer, dim.y - upper);
@@ -83,10 +84,14 @@
           var ul = new Vector2d(x, y);
           var wh = new Vector2d(width, height);
           var room = new Rect(ul, ul.add(wh));
-
+          attemptCount++;
           // #TODO put an upper bound here... can potentially infinite loop
           //  here
-        } while (overlapsOtherRoom(room, rooms));
+        } while (overlapsOtherRoom(room, rooms) && attemptCount < 30);
+        if (attemptCount >= 30)
+        {
+          return rooms;
+        }
 
         rooms.push(room.enlarge(-buffer));
       }
@@ -468,7 +473,7 @@
     </script>
 
   </head>
-  <body onload="main(new Vector2d(600, 600))" style="margin: 0px; padding: 0px;" bgcolor="black">
+  <body onload="main(new Vector2d(300, 300))" style="margin: 0px; padding: 0px;" bgcolor="black">
 
     <canvas id="canvas" style="z-index: 20;"></canvas>
     <canvas id="tile_canvas" style="z-index: 20;"></canvas>
