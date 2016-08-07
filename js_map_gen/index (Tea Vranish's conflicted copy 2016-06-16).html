@@ -72,8 +72,8 @@
       var upper = size + r + buffer;
       for (var j = 0; j < n; j++) {
         do {
-          var x = getRandomInt(0, dim.x);
-          var y = getRandomInt(0, dim.y);
+          var x = getRandomInt(upper, dim.x - upper);
+          var y = getRandomInt(upper, dim.y - upper);
           var width = getRandomInt(lower, upper);
           var height = getRandomInt(lower, upper);
           var ul = new Vector2d(x, y);
@@ -88,6 +88,7 @@
       }
       return rooms;
     }
+    
     //********************************
     // more new code by Tea
     // attempts at grid and translation

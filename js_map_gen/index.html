@@ -7,26 +7,29 @@
     <script>
     "use strict";
 
+    var AWESOME_FACTOR_X = 0;
+    var AWESOME_FACTOR_Y = 0;
+
     function getRandomInt(min, max) {
       return Math.floor(Math.random() * (max - min)) + min;
     }
 
 
-    function makeSections(n, border, width, height) {
+    function makeSections(n, border, dim) {
       var borderPoints = [];
       for (var i = 0; i < n; i ++) {
-        var adjustedBorder = Math.min(border/2, Math.min(width, height))
-        var centerX = width / 2;
-        var centerY = height / 2;
+        var adjustedBorder = border.mul(dim);
+        var center = dim.scale(0.5);
         var pi2 = Math.PI * 2.0;
         var theta = (pi2/n) * i;
-        var varianceX = Math.random() * adjustedBorder;
-        // var varianceY = Math.random() * adjustedBorder;
-        borderPoints.push(new Vector2d(
-            centerX + (Math.cos(theta) * (centerX - adjustedBorder + varianceX)),
-            centerY + (Math.sin(theta) * (centerY - adjustedBorder+ varianceX))
-          )
-        )
+        var variance = adjustedBorder.scale(Math.random());
+        var direction = new Vector2d(Math.cos(theta), Math.sin(theta));
+        borderPoints.push(center.add(center.sub(adjustedBorder).add(variance).mul(direction)));
+//         borderPoints.push(new Vector2d(
+//             centerX + (Math.cos(theta) * (centerX - adjustedBorder + varianceX)),
+//             centerY + (Math.sin(theta) * (centerY - adjustedBorder + varianceX))
+//           )
+//         )
       }
       return borderPoints;
     }
@@ -73,8 +76,8 @@
       var upper = size + r + buffer;
       for (var j = 0; j < n; j++) {
         do {
-          var x = getRandomInt(0, dim.x);
-          var y = getRandomInt(0, dim.y);
+          var x = getRandomInt(buffer, dim.x - upper);
+          var y = getRandomInt(buffer, dim.y - upper);
           var width = getRandomInt(lower, upper);
           var height = getRandomInt(lower, upper);
           var ul = new Vector2d(x, y);
@@ -89,6 +92,7 @@
       }
       return rooms;
     }
+
     //********************************
     // more new code by Tea
     // attempts at grid and translation
@@ -306,11 +310,17 @@
       }
     }
 
-    function main() {
+    function main(size) {
       var canvas = document.getElementById('canvas');
+      var tileCanvas = document.getElementById('tile_canvas');
+      canvas.width = tileCanvas.width = size.x;
+      canvas.height = tileCanvas.height = size.y;
+      
+      var borderVariance = new Vector2d(0.25, 0.25);
+
       var ctx = canvas.getContext('2d');
 
-      var sections = factalizeBorder(6, 0.2, makeSections(18, 450, 800, 800));
+      var sections = factalizeBorder(6, 0.2, makeSections(18, borderVariance, size));
   //    ctx.beginPath();
   //    ctx.moveTo(sections[0][0], sections[0][1]);
       ctx.beginPath();
@@ -321,6 +331,7 @@
         var x = sections[things].x
         var y = sections[things].y
         ctx.lineTo(x, y);
+
 
       }
 
@@ -338,7 +349,7 @@
       //my code
 			var roomsList = []
 			var pathList = []
-      var rooms = makeRooms(new Vector2d(600, 600), 16, 80, 40, 10);
+      var rooms = makeRooms(size, 16, 80, 40, 10);
       for (var roomIdx in rooms) {
         var room = rooms[roomIdx];
         // console.log(room);
@@ -449,7 +460,7 @@
       var tile_canvas = document.getElementById('tile_canvas');
       var tile_ctx = tile_canvas.getContext('2d');
 
-      var grid = makeGrid(sections, roomsList, pathList, 1000, 1000);
+      var grid = makeGrid(sections, roomsList, pathList, sizeX, sizeY);
       renderGrid(tile_ctx, grid);
 
     }
@@ -457,10 +468,10 @@
     </script>
 
   </head>
-  <body onload="main()" style="margin: 0px; padding: 0px;" bgcolor="black">
+  <body onload="main(new Vector2d(600, 600))" style="margin: 0px; padding: 0px;" bgcolor="black">
 
-    <canvas id="canvas" width="1000" height="1000" style="z-index: 20;"></canvas>
-    <canvas id="tile_canvas" width="1000" height="1000" style="z-index: 20;"></canvas>
+    <canvas id="canvas" style="z-index: 20;"></canvas>
+    <canvas id="tile_canvas" style="z-index: 20;"></canvas>
 
   </body>
 </html>
