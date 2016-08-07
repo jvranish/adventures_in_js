@@ -1,4 +1,3 @@
-
 <html>
   <head>
     <title>js - canvas experiments</title>
@@ -6,14 +5,10 @@
     <script type="text/javascript" src="./rect.js"></script>
     <script>
     "use strict";
-
-    var AWESOME_FACTOR_X = 0;
-    var AWESOME_FACTOR_Y = 0;
-
+    
     function getRandomInt(min, max) {
       return Math.floor(Math.random() * (max - min)) + min;
     }
-
 
     function makeSections(n, border, dim) {
       var borderPoints = [];
@@ -184,7 +179,7 @@
         }
       }
 
-      //fillOcean(grid, width, height);
+      fillOcean(grid, width, height);
 			
 			//Path
 			if (pathPoints.length > 0) {
