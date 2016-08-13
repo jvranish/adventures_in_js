@@ -9,8 +9,14 @@ Rect.create = function(a, b) {
 };
 
 Rect.prototype.overlaps = function (other) {
-  return this.lr.greaterOrEqual(other.ul) && this.ul.less(other.lr);
+  return this.br.greaterOrEqual(other.ul) && this.ul.less(other.br);
 };
+
+Rect.prototype.enlarge = function (other) {
+  return new Rect(this.ul.sub(Vector2d.fromScalar(other)),
+                  this.br.add(Vector2d.fromScalar(other)))
+}
+
 Rect.prototype.outerCorners = function () {
   return new Rect(this.ul.floor(), this.br.ceil());
 };
@@ -23,3 +29,15 @@ Rect.prototype.eachGridPoint = function(f) {
 Rect.prototype.map = function(f) {
   return new Rect(f(this.ul), f(this.br));
 };
+
+Rect.prototype.width = function() {
+  return Math.abs(this.ul.x - this.br.x);
+};
+
+Rect.prototype.height = function() {
+  return Math.abs(this.ul.y - this.br.y);
+};
+
+Rect.prototype.center = function() {
+  return this.ul.add(this.br).scale(0.5);
+}

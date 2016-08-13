@@ -1,5 +1,221 @@
 "use strict";
 
+//**********************************************
+//  New code for converting
+// ******************************************
+function convertGrid(grid, width, height) {
+
+  //clean up any annomolies that our tiles can't render
+  var newGrid = new Array(height*2);
+  for (var x = 0; x < height*2; x++)
+  {
+    newGrid[x] = new Array(width*2);
+    newGrid[x].fill([]);
+  }
+  for (var i = 0; i < width; i++) {
+    for (var j = 0; j < height; j++) {
+
+      var c1 = grid[i][j-1 > 0? j-1 : height-1];
+      var c3 = grid[i+1 < width? i+1 : 0][j];
+      var c5 = grid[i][j+1 < height? j+1 : 0];
+      var c7 = grid[i-1 > 0? i-1 : width-1][j];
+
+      var c2 = grid[i+1 < width? i+1 : 0][j-1 > 0? j-1 : height-1];
+      var c4 = grid[i+1 < width? i+1 : 0][j+1 < height? j+1 : 0];
+      var c6 = grid[i-1 > 0? i-1 : width-1][j+1 < height? j+1 : 0];
+      var c8 = grid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
+
+      var current = grid[i][j];
+      if (current == "" && c5 == "lower" && c4 == "" && c3 == "lower") {
+        //c5
+        grid[i][j+1 < height? j+1 : 0] = "";
+        //c3
+        grid[i+1 < width? i+1 : 0][j] = "";
+      }
+      if (current == "" && c7 == "lower" && c6 == "" && c5 == "lower") {
+        //c7
+        grid[i-1 > 0? i-1 : width-1][j] = "lower";
+        //c3
+        grid[i][j+1 < height? j+1 : 0] = "lower";
+      }
+
+    }
+  }//done cleaning
+
+  //**********************************//
+  //this is where the tile magic happens
+  //**********************************//
+  function createCliff(newGrid, x, y, w, h, offset, type) {
+    var s1 = x-offset[0];
+    var s2 = y-offset[1];
+    for (var i = 0; i < h; i++) {
+      for (var j = 0; j < w; j++) {
+        //this is davids code... if it doesn't work its his
+        //to fix ;)
+        newGrid[s1+i][s2+j] = newGrid[s1+i][s2+j].concat([type + i + j*16]);
+      }
+    }
+
+
+  }
+  function createGrass(x, y) {
+
+    //if we want to create a tree this is where we would do it.
+    //var isTree = getRandomInt(0, 100);
+    //its just grass
+    //if (isTree <= 80) {
+    newGrid[x][y] = newGrid[x][y].concat([79]);
+    //}
+    //its a tree!
+    //else {
+      //fancy code for making a tree
+    //}
+
+  }
+
+  var n = 0;
+  for (var i = 0; i < height; i++) {
+
+    var m = 0;
+    for (var j = 0; j < width; j++) {
+
+      if (newGrid[i][j] != "ocean") {
+        //8 1 2
+        //7 0 3
+        //6 5 4
+        var c1 = newGrid[i][j-1 > 0? j-1 : height-1];
+        var c3 = newGrid[i+1 < width? i+1 : 0][j];
+        var c5 = newGrid[i][j+1 < height? j+1 : 0];
+        var c7 = newGrid[i-1 > 0? i-1 : width-1][j];
+
+        var c2 = newGrid[i+1 < width? i+1 : 0][j-1 > 0? j-1 : height-1];
+        var c4 = newGrid[i+1 < width? i+1 : 0][j+1 < height? j+1 : 0];
+        var c6 = newGrid[i-1 > 0? i-1 : width-1][j+1 < height? j+1 : 0];
+        var c8 = newGrid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
+
+        var current = newGrid[i][j];
+
+        //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
+        if (current == "" && c1 == "lower" && c8 == "lower" && c7 == "lower"  ) {
+          //type = 0
+          createCliff(newGrid, n, m, 2, 2, [1,1], 0);
+        }
+        //condition for Cliff8b (convex) - (c1 and c7 are the same as e but 8 is lower)
+        else if (current == "" && c1 == "" && c8 == "lower" && c7 == "") {
+          //type = 112
+          createCliff(newGrid, n, m, 2, 2, [1,1], 112);
+        }
+        //condition for Cliff1 (north) - (c1 and c8 are lower than e but 7 is the same)
+        else if (current == "" && c1 == "lower" && c8 == "lower" && c7 == "") {
+          //type = 2
+          createCliff(newGrid, n, m, 1, 2, [0,1], 2);
+        }
+        //condition for Cliff7 (west) - (c7 and c8 are lower than e but 1 is the same)
+        else if (current == "" && c1 == "" && c8 == "lower" && c7 == "lower") {
+          //type = 32
+          createCliff(newGrid, n, m, 2, 1, [1,0], 32);
+        }
+        else {
+          createGrass(n, m);
+        }
+
+        //condition for Cliff2a (concave) - (c1, c2 and c3 are all lower than e)
+        if (current == "" && c1 == "lower" && c2 == "lower" && c3 == "lower") {
+            //type = 4
+            createCliff(newGrid, n+1, m, 2, 2, [0,1], 4);
+        }
+        //condition for Cliff2b (convex) - (c1 and c3 are the same as e but 2 is lower
+        else if (current == "" && c1 == "" && c2 == "lower" && c3 == "") {
+          //type = 146
+          createCliff(newGrid, n+1, m, 2, 2, [0,1], 146);
+        }
+        //condition for Cliff1 (north) - (c1 and c2 are lower than e but 3 is the same)
+        else if (current == "" && c1 == "lower" && c2 == "lower" && c3 == "") {
+          //type = 2
+          createCliff(newGrid, n+1, m, 1, 2, [0,1], 2);
+        }
+        //condition for Cliff3 (east) - (c3 and c2 are lower than e but 1 is the same)
+        else if (current == "" && c1 == "" && c2 == "lower" && c3 == "lower") {
+          //type = 36
+          createCliff(newGrid, n+1, m, 2, 1, [0,0], 36);
+        }
+        else {
+          createGrass(n+1, m);
+        }
+
+
+        //condition for Cliff4a (concave) - (c5, c4 and c3 are all lower than e)
+        if (current == "" && c5 == "lower" && c4 == "lower" && c3 == "lower") {
+          //type = 68
+          createCliff(newGrid, n+1, m+1, 2, 3, [0,0], 68);
+        }
+        //condition for Cliff4b (convex) - (c5 and c3 are the same as e but 4 is lower)
+        else if (current == "" && c5 == "" && c4 == "lower" && c3 == "") {
+          //type = 146
+          createCliff(newGrid, n+1, m+1, 2, 3, [0,0], 146);
+        }
+        //condition for Cliff5 (south) - (c5 and c4 are lower than e but 3 is the same)
+        else if (current == "" && c5 == "lower" && c4 == "lower" && c3 == "") {
+          //type = 66
+          createCliff(newGrid, n+1, m+1, 1, 2, [0,0], 66);
+        }
+        //condition for Cliff3 (east) - (c4 and c3 are lower than e but 5 is the same)
+        else if (current == "" && c5 == "" && c4 == "lower" && c3 == "lower") {
+          //type = 36
+          createCliff(newGrid, n+1, m+1, 2, 1, [0,0], 36);
+        }
+        else {
+          createGrass(n+1, m+1);
+        }
+
+
+        //condition for Cliff6a (concave) - (c5, c6 and c7 are all lower than e)
+        if (current == "" && c5 == "lower" && c6 == "lower" && c7 == "lower") {
+          //type = 64
+          createCliff(newGrid, n, m+1, 2, 3, [1,0], 64);
+        }
+        //condition for Cliff6b (convex) - (c5 and c7 are the same as e but 6 is lower)
+        else if (current == "" && c5 == "" && c6 == "lower" && c7 == "") {
+          //type = 144
+          createCliff(newGrid, n, m+1, 2, 3, [1,0], 144);
+        }
+        //condition for Cliff5 (north) - (c5 and c6 are lower than e but 7 is the same)
+        else if (current == "" && c5 == "lower" && c6 == "lower" && c7 == ""){
+          //type = 66
+          createCliff(newGrid, n, m+1, 1, 2, [0,0], 66);
+        }
+        //condition for Cliff7 (west) - (c7 and c6 are lower than e but 5 is the same)
+        else if (current == "" && c5 == "" && c6 == "lower" && c7 == "lower") {
+          //type = 32
+          createCliff(newGrid, n, m+1, 2, 1, [1,0], 32);
+        }
+        else {
+          createGrass(n, m+1);
+        }
+
+      }
+      else {//if it is an ocean
+        //we are expanding every square into four squares. In this case all four are an exact copy
+        //*****
+        // we don't have a tile for ocean yet
+        // so ocean is using the stone tile 10
+        newGrid[n][m] = newGrid[n][m].concat([10]);
+
+        newGrid[n][m+1] = newGrid[n][m+1].concat([10]);
+
+        newGrid[n+1][m] = newGrid[n+1][m].concat([10]);
+
+        newGrid[n+1][m+1] = newGrid[n+1][m+1].concat([10]);
+      }//end of !Ocean
+
+      m = m + 2;
+    }//end of j
+
+    n = n + 2;
+  }//end of i
+  return newGrid;
+}
+
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
@@ -152,7 +368,7 @@ function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
   }
   //***still need some path between points? how do we do that?***
   //assign some value to grid where we have already established points
-  
+
   function plotCoast(p) {
     grid[p.x][p.y] = "coast";
   }
@@ -161,12 +377,11 @@ function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
       grid[p.x][p.y] = "lower";
     }
   }
-  
+
 
 
   if (coastPoints.length > 0) {
     var lastCoastPoint = coastPoints[coastPoints.length - 1];
-    lastCoastPoint
     for (var p in coastPoints) {
       drawGridLine(lastCoastPoint, coastPoints[p], plotCoast);
       lastCoastPoint = coastPoints[p];
@@ -175,7 +390,7 @@ function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
   }
 
   fillOcean(grid, width, height);
-  
+
   //Path
   if (pathPoints.length > 0) {
     for (var pa in pathPoints) {
@@ -207,8 +422,8 @@ function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
         }
       }
     }
-  } 
- 
+  }
+
 
 
 
@@ -308,16 +523,14 @@ function renderGrid(ctx, grid) {
 function generateMapComponents(size) {
   var borderVariance = new Vector2d(0.25, 0.25);
 
-  var ctx = canvas.getContext('2d');
-
   var sections = factalizeBorder(6, 0.2, makeSections(18, borderVariance, size));
 
-  var roomsList = []
-  var pathList = []
+  var roomsList = [];
+  var pathList = [];
   var rooms = makeRooms(size, 16, 0.08*Math.min(size.x, size.y), 0.5, 10);
   for (var roomIdx in rooms) {
     var room = rooms[roomIdx];
-    var roomPoints = []
+    var roomPoints = [];
     roomPoints.push(new Vector2d(
             room.ul.x + getRandomInt(5, 10) - 10,
             room.ul.y + getRandomInt(5, 10) - 10
@@ -349,11 +562,12 @@ function generateMapComponents(size) {
 
     pathList.push(pathPoints);
   }
-  return [sections, roomsList, pathList]
+  return [sections, roomsList, pathList];
 }
 
 function generateMap(size) {
   var [sections, roomsList, pathList] = generateMapComponents(size)
-  return makeGrid(sections, roomsList, pathList, size.x, size.y);
+  var grid = makeGrid(sections, roomsList, pathList, size.x, size.y);
+  return convertGrid(grid, size.x, size.y);
 }
 

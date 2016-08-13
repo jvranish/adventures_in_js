@@ -9,7 +9,9 @@ function Map(mapSizeTiles, mapSeed, prng) {
   this.tileSize = new Vector2d(32, 32);
 
   //this.tileGrid = this.generateRandomMap(mapSizeTiles, mapSeed);
-  this.tileGrid = mapFile;
+  // generateMap(mapSizeTiles);
+  // this.tileGrid = mapFile;
+  this.tileGrid = generateMap(mapSizeTiles);
   //debug();
   //this.glInfo = this.generateMapGlCoords();
 }

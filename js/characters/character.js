@@ -15,7 +15,7 @@ var Character = function(aPlayerPos, facingDir) {
   this.playerPos = aPlayerPos;
   this.facingDir = facingDir;
   this.destinationPos = null;
-  this.walkSpeed = 100.0;
+  this.walkSpeed = 1000.0;
 };
 
 Character.rehydrate = function(obj) {

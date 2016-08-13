@@ -81,6 +81,7 @@ Vector2d.setupPrototype = function(f) {
   f.prototype.perpendicular = function () {
     return new this.constructor(-this.y, this.x);
   };
+
   f.prototype.normalize = function () {
     var m = this.magnitude();
     if (m === 0)
@@ -97,6 +98,27 @@ Vector2d.setupPrototype = function(f) {
       return this
     }
   };
+
+  f.prototype.abs = function () {
+    return new this.constructor(Math.abs(this.x), Math.abs(this.y));
+  };
+
+  f.prototype.maxElem = function () {
+    if (this.y > this.x) {
+      return this.y;
+    } else {
+      return this.x;
+    }
+  }
+
+  f.prototype.closestCardinal = function() {
+    var absVec = this.abs();
+    if (absVec.x >= absVec.y) {
+      return new this.constructor(this.x / absVec.x, 0);
+    } else {
+      return new this.constructor(0, this.y / absVec.y);
+    }
+  }
 
   f.prototype.distance = function (other) {
     return this.sub(other).magnitude();
