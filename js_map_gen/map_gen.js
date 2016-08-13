@@ -79,21 +79,21 @@ function convertGrid(grid, width, height) {
     var m = 0;
     for (var j = 0; j < width; j++) {
 
-      if (newGrid[i][j] != "ocean") {
+      if (grid[i][j] != "ocean") {
         //8 1 2
         //7 0 3
         //6 5 4
-        var c1 = newGrid[i][j-1 > 0? j-1 : height-1];
-        var c3 = newGrid[i+1 < width? i+1 : 0][j];
-        var c5 = newGrid[i][j+1 < height? j+1 : 0];
-        var c7 = newGrid[i-1 > 0? i-1 : width-1][j];
+        var c1 = grid[i][j-1 > 0? j-1 : height-1];
+        var c3 = grid[i+1 < width? i+1 : 0][j];
+        var c5 = grid[i][j+1 < height? j+1 : 0];
+        var c7 = grid[i-1 > 0? i-1 : width-1][j];
 
-        var c2 = newGrid[i+1 < width? i+1 : 0][j-1 > 0? j-1 : height-1];
-        var c4 = newGrid[i+1 < width? i+1 : 0][j+1 < height? j+1 : 0];
-        var c6 = newGrid[i-1 > 0? i-1 : width-1][j+1 < height? j+1 : 0];
-        var c8 = newGrid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
+        var c2 = grid[i+1 < width? i+1 : 0][j-1 > 0? j-1 : height-1];
+        var c4 = grid[i+1 < width? i+1 : 0][j+1 < height? j+1 : 0];
+        var c6 = grid[i-1 > 0? i-1 : width-1][j+1 < height? j+1 : 0];
+        var c8 = grid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
 
-        var current = newGrid[i][j];
+        var current = grid[i][j];
 
         //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
         if (current == "" && c1 == "lower" && c8 == "lower" && c7 == "lower"  ) {
