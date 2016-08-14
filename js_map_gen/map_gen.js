@@ -48,8 +48,8 @@ function convertGrid(grid, width, height) {
   function createCliff(newGrid, x, y, w, h, offset, type) {
     var s1 = x-offset[0];
     var s2 = y-offset[1];
-    for (var i = 0; i < h; i++) {
-      for (var j = 0; j < w; j++) {
+    for (var i = 0; i < w; i++) {
+      for (var j = 0; j < h; j++) {
         //this is davids code... if it doesn't work its his
         //to fix ;)
         newGrid[s1+i][s2+j] = newGrid[s1+i][s2+j].concat([type + i + j*16]);
