@@ -61,7 +61,7 @@ function convertGrid(grid, width, height) {
   function createGrass(x, y) {
 
     //if we want to create a tree this is where we would do it.
-    //var isTree = getRandomInt(0, 100);
+    //var isTree = prng.nextIntRange(0, 100);
     //its just grass
     //if (isTree <= 80) {
     newGrid[x][y] = newGrid[x][y].concat([79]);
@@ -216,18 +216,14 @@ function convertGrid(grid, width, height) {
   return newGrid;
 }
 
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min)) + min;
-}
-
-function makeSections(n, border, dim) {
+function makeSections(prng, n, border, dim) {
   var borderPoints = [];
   for (var i = 0; i < n; i ++) {
     var adjustedBorder = border.mul(dim);
     var center = dim.scale(0.5);
     var pi2 = Math.PI * 2.0;
     var theta = (pi2/n) * i;
-    var variance = adjustedBorder.scale(Math.random());
+    var variance = adjustedBorder.scale(prng.nextDouble());
     var direction = new Vector2d(Math.cos(theta), Math.sin(theta));
     borderPoints.push(center.add(center.sub(adjustedBorder).add(variance).mul(direction)));
 //         borderPoints.push(new Vector2d(
@@ -239,31 +235,31 @@ function makeSections(n, border, dim) {
   return borderPoints;
 }
 
-function fractalPoints(n, g, a, b) {
+function fractalPoints(prng, n, g, a, b) {
   if (n > 0) {
     var initialDir = a.directionTo(b);
     var dist = a.distance(b);
     var gDist = g * dist;
     var c = a.add(b).scale(0.5); // average points to get point in the middle
-    var r = (Math.random() * gDist * 2)  - gDist; //a range from -g to g
+    var r = (prng.nextDouble() * gDist * 2)  - gDist; //a range from -g to g
     var p = a.directionTo(b).perpendicular().normalize().scale(r);
     var d = c.add(p);
-    return fractalPoints(n-1, g, a, d).concat([d]).concat(fractalPoints(n-1, g, d, b));
+    return fractalPoints(prng, n-1, g, a, d).concat([d]).concat(fractalPoints(prng, n-1, g, d, b));
   }
   return [];
 }
 
-function factalizeBorder(n, g, points) {
+function factalizeBorder(prng, n, g, points) {
   var fractalBorder = []
   if (points.length >= 2) {
     // fractalBorder.push(points[0]);
     for (var j = 1; j < points.length; j++) {
       fractalBorder.push(points[j-1]);
-      fractalBorder = fractalBorder.concat(fractalPoints(n, g, points[j-1], points[j]));
+      fractalBorder = fractalBorder.concat(fractalPoints(prng, n, g, points[j-1], points[j]));
       fractalBorder.push(points[j]);
     }
   }
-  return fractalBorder.concat(fractalPoints(n, g, points[points.length - 1], points[0]));
+  return fractalBorder.concat(fractalPoints(prng, n, g, points[points.length - 1], points[0]));
 }
 
 function overlapsOtherRoom(room, rooms) {
@@ -275,7 +271,7 @@ function overlapsOtherRoom(room, rooms) {
   return false;
 }
 
-function makeRooms(dim, n, size, r, buffer){
+function makeRooms(prng, dim, n, size, r, buffer){
   var rooms = [];
   var variance = r * size
   var lower = size - variance + buffer;
@@ -283,10 +279,10 @@ function makeRooms(dim, n, size, r, buffer){
   for (var j = 0; j < n; j++) {
     var attemptCount = 0;
     do {
-      var x = getRandomInt(buffer, dim.x - upper);
-      var y = getRandomInt(buffer, dim.y - upper);
-      var width = getRandomInt(lower, upper);
-      var height = getRandomInt(lower, upper);
+      var x = prng.nextIntRange(buffer, dim.x - upper);
+      var y = prng.nextIntRange(buffer, dim.y - upper);
+      var width = prng.nextIntRange(lower, upper);
+      var height = prng.nextIntRange(lower, upper);
       var ul = new Vector2d(x, y);
       var wh = new Vector2d(width, height);
       var room = new Rect(ul, ul.add(wh));
@@ -520,53 +516,59 @@ function renderGrid(ctx, grid) {
   }
 }
 
-function generateMapComponents(size) {
+function generateMapComponents(size, seed) {
   var borderVariance = new Vector2d(0.25, 0.25);
 
-  var sections = factalizeBorder(6, 0.2, makeSections(18, borderVariance, size));
+  // it's important to fork the global prng and create a new
+  // instance from the map seed here.
+  //   that way we can change the map generation algorithm without
+  //   it affecting other random things
+  var prng = new ParkMillerRNG(seed);
+
+  var sections = factalizeBorder(prng, 6, 0.2, makeSections(prng, 18, borderVariance, size));
 
   var roomsList = [];
   var pathList = [];
-  var rooms = makeRooms(size, 16, 0.08*Math.min(size.x, size.y), 0.5, 10);
+  var rooms = makeRooms(prng, size, 16, 0.08*Math.min(size.x, size.y), 0.5, 10);
   for (var roomIdx in rooms) {
     var room = rooms[roomIdx];
     var roomPoints = [];
     roomPoints.push(new Vector2d(
-            room.ul.x + getRandomInt(5, 10) - 10,
-            room.ul.y + getRandomInt(5, 10) - 10
+            room.ul.x + prng.nextIntRange(5, 10) - 10,
+            room.ul.y + prng.nextIntRange(5, 10) - 10
           )
         );
     roomPoints.push(new Vector2d(
-            room.ul.x + room.width() + getRandomInt(0, 5),
-            room.ul.y + getRandomInt(5, 10) - 10
+            room.ul.x + room.width() + prng.nextIntRange(0, 5),
+            room.ul.y + prng.nextIntRange(5, 10) - 10
           )
         );
     roomPoints.push(new Vector2d(
-            room.ul.x + room.width() + getRandomInt(0, 5),
-            room.ul.y + room.height() + getRandomInt(0, 5)
+            room.ul.x + room.width() + prng.nextIntRange(0, 5),
+            room.ul.y + room.height() + prng.nextIntRange(0, 5)
           )
         );
     roomPoints.push(new Vector2d(
-            room.ul.x + getRandomInt(5, 10) - 10,
-            room.ul.y + room.height() + getRandomInt(0, 5)
+            room.ul.x + prng.nextIntRange(5, 10) - 10,
+            room.ul.y + room.height() + prng.nextIntRange(0, 5)
           )
         );
-    var roomSections = factalizeBorder(6, 0.2, roomPoints);
+    var roomSections = factalizeBorder(prng, 6, 0.2, roomPoints);
     roomsList.push(roomSections);
   }
 
   for (var j in rooms) {
-    var k = getRandomInt(0, rooms.length - 1);
+    var k = prng.nextIntRange(0, rooms.length - 1);
 
-    var pathPoints = fractalPoints(8, 0.1, rooms[j].center(), rooms[k].center());
+    var pathPoints = fractalPoints(prng, prng, 8, 0.1, rooms[j].center(), rooms[k].center());
 
     pathList.push(pathPoints);
   }
   return [sections, roomsList, pathList];
 }
 
-function generateMap(size) {
-  var [sections, roomsList, pathList] = generateMapComponents(size)
+function generateMap(size, seed) {
+  var [sections, roomsList, pathList] = generateMapComponents(size, seed)
   var grid = makeGrid(sections, roomsList, pathList, size.x, size.y);
   return convertGrid(grid, size.x, size.y);
 }

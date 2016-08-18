@@ -11,7 +11,7 @@ function Map(mapSizeTiles, mapSeed, prng) {
   //this.tileGrid = this.generateRandomMap(mapSizeTiles, mapSeed);
   // generateMap(mapSizeTiles);
   // this.tileGrid = mapFile;
-  this.tileGrid = generateMap(mapSizeTiles);
+  this.tileGrid = generateMap(mapSizeTiles, mapSeed);
   //debug();
   //this.glInfo = this.generateMapGlCoords();
 }
@@ -23,9 +23,9 @@ Map.prototype.generateRandomMap = function(size, seed) {
     map[x] = [];
     for (var y = 0; y < size.y; y++) {
       map[x][y] = [];
-      map[x][y][0] = prng.nextInt(0, 255);
-      map[x][y][1] = prng.nextInt(0, 255);
-      map[x][y][2] = prng.nextInt(0, 255);
+      map[x][y][0] = prng.nextIntRange(0, 255);
+      map[x][y][1] = prng.nextIntRange(0, 255);
+      map[x][y][2] = prng.nextIntRange(0, 255);
     }
   }
   return map;

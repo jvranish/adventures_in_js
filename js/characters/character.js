@@ -21,10 +21,10 @@ var Character = function(aPlayerPos, facingDir) {
 Character.rehydrate = function(obj) {
   Vector2d.rehydrate(obj.playerPos);
   Vector2d.rehydrate(obj.facingDir);
-  if (this.destinationPos !== null) {
+  if (obj.destinationPos !== null) {
     Vector2d.rehydrate(this.destinationPos);
   }
-  obj.__proto__ = Character;
+  obj.__proto__ = Character.prototype;
   return obj;
 }
 

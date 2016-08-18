@@ -153,7 +153,7 @@ Vector2d.fromScalar = function (scalar) {
 };
 
 Vector2d.rehydrate = function (obj) {
-  obj.__proto__ = Vector2d;
+  obj.__proto__ = Vector2d.prototype;
   return obj;
 }
 

@@ -13,9 +13,18 @@ function main() {
     var canvas = document.getElementById("canvas");
     // twgl.resizeCanvasToDisplaySize(canvas);
 
-    var world = new World(new Vector2d(100, 100), 12345, 4321123);
-    world.playerJoined(0);
+    var mapSeed = Math.floor(Math.random() * 2147483648);
+    var world = new World(new Vector2d(100, 100), 12345, mapSeed);
+
+    var storedWorld = sessionStorage.getItem('world');
+    if (storedWorld) {
+      world.setData(JSON.parse(storedWorld));
+    } else {
+      world.playerJoined(0);
+    }
+
     var localPlayer = world.players[0];
+
     //localPlayer.playerPos = new Vector2d(450, 450).scale(32).neg();
 
   // var canvas = document.getElementById("viewPort");
@@ -112,6 +121,7 @@ function main() {
     gameState.coordConverter.update(gameState.localPlayer.playerPos);
     gameState.glInfo.update();
     gameState.world.update(dt);
+    sessionStorage.setItem('world', JSON.stringify(gameState.world.getData()));
   }
   
   function render(dt, gameState, time) {
