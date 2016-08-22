@@ -97,11 +97,11 @@ function convertGrid(grid, width, height) {
         var c8 = grid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
 
         var current = grid[i][j];
+        createGrass(n, m);
 
         //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
         if (current == "" && c1 == "lower" && c8 == "lower" && c7 == "lower"  ) {
           //type = 0
-          // createGrass(n, m);
           createCliff(newGrid, n, m, 2, 2, [1,1], 0);
         }
         //condition for Cliff8b (convex) - (c1 and c7 are the same as e but 8 is lower)
