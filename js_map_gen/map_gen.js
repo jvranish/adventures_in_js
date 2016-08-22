@@ -52,7 +52,7 @@ function convertGrid(grid, width, height) {
       for (var j = 0; j < h; j++) {
         //this is davids code... if it doesn't work its his
         //to fix ;)
-        newGrid[s1+i][s2+j] = newGrid[s1+i][s2+j].concat([type + i + j*16]);
+        newGrid[s1+i][s2+j] = [type + i + j*16].concat(newGrid[s1+i][s2+j]);
       }
     }
 
@@ -66,6 +66,7 @@ function convertGrid(grid, width, height) {
     //if (isTree <= 80) {
     
     //newGrid[x][y] = newGrid[x][y].splice(0, 0, [79]);
+    newGrid[x][y] = newGrid[x][y].concat([79]);
     
     //}
     //its a tree!
@@ -100,6 +101,7 @@ function convertGrid(grid, width, height) {
         //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
         if (current == "" && c1 == "lower" && c8 == "lower" && c7 == "lower"  ) {
           //type = 0
+          // createGrass(n, m);
           createCliff(newGrid, n, m, 2, 2, [1,1], 0);
         }
         //condition for Cliff8b (convex) - (c1 and c7 are the same as e but 8 is lower)
