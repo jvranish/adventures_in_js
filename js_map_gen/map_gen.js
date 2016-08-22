@@ -34,9 +34,9 @@ function convertGrid(grid, width, height) {
       }
       if (current == "" && c7 == "lower" && c6 == "" && c5 == "lower") {
         //c7
-        grid[i-1 > 0? i-1 : width-1][j] = "lower";
+        grid[i-1 > 0? i-1 : width-1][j] = "";
         //c3
-        grid[i][j+1 < height? j+1 : 0] = "lower";
+        grid[i][j+1 < height? j+1 : 0] = "";
       }
 
     }
