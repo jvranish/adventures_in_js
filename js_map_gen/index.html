@@ -3,6 +3,7 @@
     <title>js - canvas experiments</title>
     <script type="text/javascript" src="./vector2d.js"></script>
     <script type="text/javascript" src="./rect.js"></script>
+    <script type="text/javascript" src="../js/lib/park_miller_rng.js"></script>
     <script type="text/javascript" src="./map_gen.js"></script>
     <script>
 
@@ -59,7 +60,8 @@
       canvas.width = tileCanvas.width = size.x;
       canvas.height = tileCanvas.height = size.y;
 
-      var [sections, roomsList, pathList] = generateMapComponents(size)
+      var mapSeed = Math.floor(Math.random() * 2147483648);
+      var [sections, roomsList, pathList] = generateMapComponents(size, mapSeed);
 
       var ctx = canvas.getContext('2d');
 
@@ -77,7 +79,7 @@
     </script>
 
   </head>
-  <body onload="main(new Vector2d(100, 100))" style="margin: 0px; padding: 0px;" bgcolor="black">
+  <body onload="main(new Vector2d(200, 200))" style="margin: 0px; padding: 0px;" bgcolor="black">
 
     <canvas id="canvas" style="z-index: 20;"></canvas>
     <canvas id="tile_canvas" style="z-index: 20;"></canvas>

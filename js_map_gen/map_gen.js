@@ -560,7 +560,7 @@ function generateMapComponents(size, seed) {
   for (var j in rooms) {
     var k = prng.nextIntRange(0, rooms.length - 1);
 
-    var pathPoints = fractalPoints(prng, prng, 8, 0.1, rooms[j].center(), rooms[k].center());
+    var pathPoints = fractalPoints(prng, 8, 0.1, rooms[j].center(), rooms[k].center());
 
     pathList.push(pathPoints);
   }
