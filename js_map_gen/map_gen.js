@@ -304,6 +304,55 @@ function makeRooms(prng, dim, n, size, r, buffer){
   return rooms;
 }
 
+// clipped from wikipedia example and then adapted and sanified:
+//  https://en.wikipedia.org/wiki/Midpoint_circle_algorithm#JavaScript
+function drawCircle(center, radius, plot){
+  var x = radius;
+  var y = 0;
+  var decisionOver2 = 1 - x;   // Decision criterion divided by 2 evaluated at x=r, y=0
+
+  while(x >= y){
+    lineAlgorithmOversampled(center, new Vector2d( x + center.x,  y + center.y), plot);
+    lineAlgorithmOversampled(center, new Vector2d( y + center.x,  x + center.y), plot);
+    lineAlgorithmOversampled(center, new Vector2d(-x + center.x,  y + center.y), plot);
+    lineAlgorithmOversampled(center, new Vector2d(-y + center.x,  x + center.y), plot);
+    lineAlgorithmOversampled(center, new Vector2d(-x + center.x, -y + center.y), plot);
+    lineAlgorithmOversampled(center, new Vector2d(-y + center.x, -x + center.y), plot);
+    lineAlgorithmOversampled(center, new Vector2d( x + center.x, -y + center.y), plot);
+    lineAlgorithmOversampled(center, new Vector2d( y + center.x, -x + center.y), plot);
+    y++;
+    if (decisionOver2<=0){
+      decisionOver2 += 2 * y + 1;   // Change in decision criterion for y -> y+1
+    }else{
+      x--;
+      decisionOver2 += 2 * (y - x) + 1;   // Change for y -> y+1, x -> x-1
+    }
+  }
+}
+
+function drawThickLine(a, b, radius, plot)
+{
+  var fa = a.floor();
+  var fb = b.floor();
+
+  drawCircle(fa, radius, plot);
+  drawGridLine(fa, fb, plot);
+
+  var displacement = b.sub(a);
+  var dist = displacement.magnitude();
+  if (dist > 0) {
+    var dir = displacement.scale(1.0/dist);
+    var perp = dir.perpendicular();
+    var aStart = a.sub(perp.scale(radius));
+    var aEnd = a.add(perp.scale(radius));
+
+    lineAlgorithmOversampled(aStart, aEnd, function(pStart){
+      lineAlgorithmOversampled(pStart, pStart.add(displacement), plot);
+    });
+
+    drawCircle(fb, radius, plot);
+  }
+}
 //********************************
 // more new code by Tea
 // attempts at grid and translation
@@ -317,6 +366,22 @@ function drawGridLine(a, b, plot)
   // } else {
   //   bresenhamsLineAlgorithm(a, b, plot);
   // }
+}
+
+function lineAlgorithmOversampled(a, b, plot)
+{
+  var delta = b.sub(a);
+  var numberOfSteps = delta.abs().sum();
+  if (numberOfSteps == 0) {
+    plot(a);
+  }
+  else {
+    var step = delta.scale(1.0/numberOfSteps);
+
+    for (var i = 0; i < numberOfSteps; i ++) {
+      plot(a.add(step.scale(i)).floor());
+    }
+  }
 }
 
 function lineAlgorithm(a, b, plot)
@@ -333,30 +398,6 @@ function lineAlgorithm(a, b, plot)
       plot(a.add(step.scale(i)).floor());
     }
   }
-
-
-
-  // Job's line algorithm
-  //
-  //  subtract a from b
-  //  pick the axis that has the larger absolute value
-  //
-  // pick cardinal direction, always take one step in that direction
-  //   do partial step in another direction
-  // var delta = b.sub(a);
-  // var D = delta.y - delta.x;
-  // var y = a.y;
-
-
-  // for (var x = a.x ; x < b.x; x++)
-  // {
-  //   plot(Math.floor(x),Math.floor(y));
-  //   if (D >= 0) {
-  //      var y = y + 1;
-  //      var D = D - delta.x;
-  //   }
-  //   D = D + delta.y;
-  // }
 }
 
 function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
@@ -391,23 +432,6 @@ function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
 
   fillOcean(grid, width, height);
 
-  //Path
-  if (pathPoints.length > 0) {
-    for (var pa in pathPoints) {
-      var path = pathPoints[pa]
-      if (path.length > 0) {
-        var lastPathPoint = path[0];
-        //lastPathPoint
-        for (var p in path) {
-          if (p > 0) {
-            drawGridLine(lastPathPoint, path[p], plotLower);
-          }
-          lastPathPoint = path[p];
-          //grid[p.x][p.y] = "coast";
-        }
-      }
-    }
-  }
   //room
   if (RoomPoints.length > 0) {
     for (var r in RoomPoints) {
@@ -416,13 +440,43 @@ function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
         var lastRoomPoint = room[room.length - 1];
         //lastPathPoint
         for (var p in room) {
-          drawGridLine(lastRoomPoint, room[p], plotLower);
+          drawThickLine(lastRoomPoint, room[p], 2, plotLower);
           lastRoomPoint = room[p];
           //grid[p.x][p.y] = "coast";
         }
       }
     }
   }
+  if (pathPoints.length > 0) {
+    for (var pa in pathPoints) {
+      var path = pathPoints[pa]
+      if (path.length > 0) {
+        fillLower(grid, width, height, path[0].floor());
+        fillLower(grid, width, height, path[path.length-1].floor());
+      }
+    }
+  }
+
+
+  //Path
+  var pathRadius = Math.max(Math.min(width/100, height/100), 1);
+  if (pathPoints.length > 0) {
+    for (var pa in pathPoints) {
+      var path = pathPoints[pa]
+      if (path.length > 0) {
+        var lastPathPoint = path[0];
+        //lastPathPoint
+        for (var p in path) {
+          if (p > 0) {
+            drawThickLine(lastPathPoint, path[p], pathRadius, plotLower);
+          }
+          lastPathPoint = path[p];
+          //grid[p.x][p.y] = "coast";
+        }
+      }
+    }
+  }
+  
 
 
 
@@ -452,14 +506,33 @@ function fillOcean(g, width, height) {
       if  (g[nextSpace[0]][nextSpace[1]] == "")
       {
         g[nextSpace[0]][nextSpace[1]] = "ocean";
-        // console.log(open.length);
-        //*****this line istn't wprking...*****
         process_next = process_next.concat(searchSurroundingSpace(g, nextSpace[0], nextSpace[1], width, height));
       }
       count = count + 1;
     }
   } while(process_next.length != 0);
 }
+
+function fillLower(g, width, height, start) {
+  // console.log(open.length);
+  var count = 0;
+  var process_next = searchSurroundingSpace(g, start.x, start.y, width, height);
+  do {
+    var open = process_next;
+    process_next = [];
+    while (open.length != 0) {
+    // console.log("here");
+      var nextSpace = open.pop();
+      if  (g[nextSpace[0]][nextSpace[1]] == "")
+      {
+        g[nextSpace[0]][nextSpace[1]] = "lower";
+        process_next = process_next.concat(searchSurroundingSpace(g, nextSpace[0], nextSpace[1], width, height));
+      }
+      count = count + 1;
+    }
+  } while(process_next.length != 0);
+}
+
 function searchSurroundingSpace(g, x, y, width, height) {
   var open = [];
   var points = [[x-1, y], [x+1, y],
@@ -564,7 +637,7 @@ function generateMapComponents(size, seed) {
   for (var j in rooms) {
     var k = prng.nextIntRange(0, rooms.length - 1);
 
-    var pathPoints = fractalPoints(prng, 8, 0.1, rooms[j].center(), rooms[k].center());
+    var pathPoints = [rooms[j].center()].concat(fractalPoints(prng, 5, 0.1, rooms[j].center(), rooms[k].center())).concat([rooms[k].center()]);
 
     pathList.push(pathPoints);
   }

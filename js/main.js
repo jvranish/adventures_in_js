@@ -14,7 +14,7 @@ function main() {
     // twgl.resizeCanvasToDisplaySize(canvas);
 
     var mapSeed = Math.floor(Math.random() * 2147483648);
-    var world = new World(new Vector2d(100, 100), 12345, mapSeed);
+    var world = new World(new Vector2d(300, 300), 12345, mapSeed);
 
     var storedWorld = sessionStorage.getItem('world');
     if (storedWorld) {

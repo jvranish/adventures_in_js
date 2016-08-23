@@ -61,6 +61,7 @@
       canvas.height = tileCanvas.height = size.y;
 
       var mapSeed = Math.floor(Math.random() * 2147483648);
+      // var mapSeed = 234908;
       var [sections, roomsList, pathList] = generateMapComponents(size, mapSeed);
 
       var ctx = canvas.getContext('2d');
@@ -79,7 +80,7 @@
     </script>
 
   </head>
-  <body onload="main(new Vector2d(200, 200))" style="margin: 0px; padding: 0px;" bgcolor="black">
+  <body onload="main(new Vector2d(300, 300))" style="margin: 0px; padding: 0px;" bgcolor="black">
 
     <canvas id="canvas" style="z-index: 20;"></canvas>
     <canvas id="tile_canvas" style="z-index: 20;"></canvas>

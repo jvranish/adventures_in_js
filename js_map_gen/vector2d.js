@@ -30,6 +30,9 @@ Vector2d.setupPrototype = function(f) {
   f.prototype.floor = function() {
     return new this.constructor(Math.floor(this.x), Math.floor(this.y));
   };
+  f.prototype.round = function() {
+    return new this.constructor(Math.round(this.x), Math.round(this.y));
+  };
   f.prototype.ceil = function() {
     return new this.constructor(Math.ceil(this.x), Math.ceil(this.y));
   };
