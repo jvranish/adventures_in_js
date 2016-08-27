@@ -58,7 +58,7 @@ function convertGrid(grid, width, height) {
 
 
   }
-  function createGrass(x, y) {
+  function createGrass(x, y, current) {
 
     //if we want to create a tree this is where we would do it.
     //var isTree = prng.nextIntRange(0, 100);
@@ -66,7 +66,12 @@ function convertGrid(grid, width, height) {
     //if (isTree <= 80) {
     
     //newGrid[x][y] = newGrid[x][y].splice(0, 0, [79]);
-    newGrid[x][y] = newGrid[x][y].concat([79]);
+    if (current == "lower") {
+      newGrid[x][y] = newGrid[x][y].concat([79]);
+    }
+    else if (current == "") {
+      newGrid[x][y] = newGrid[x][y].concat([10]);
+    }
     
     //}
     //its a tree!
@@ -120,7 +125,7 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n, m, 2, 1, [1,0], 32);
         }
         else {
-          createGrass(n, m);
+          createGrass(n, m, current);
         }
 
         //condition for Cliff2a (concave) - (c1, c2 and c3 are all lower than e)
@@ -144,7 +149,7 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n+1, m, 2, 1, [0,0], 36);
         }
         else {
-          createGrass(n+1, m);
+          createGrass(n+1, m, current);
         }
 
 
@@ -156,7 +161,7 @@ function convertGrid(grid, width, height) {
         //condition for Cliff4b (convex) - (c5 and c3 are the same as e but 4 is lower)
         else if (current == "" && c5 == "" && c4 == "lower" && c3 == "") {
           //type = 146
-          createCliff(newGrid, n+1, m+1, 2, 4, [0,0], 56);
+          createCliff(newGrid, n+1, m+1, 2, 3, [0,0], 56);
         }
         //condition for Cliff5 (south) - (c5 and c4 are lower than e but 3 is the same)
         else if (current == "" && c5 == "lower" && c4 == "lower" && c3 == "") {
@@ -169,7 +174,7 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n+1, m+1, 2, 1, [0,0], 36);
         }
         else {
-          createGrass(n+1, m+1);
+          createGrass(n+1, m+1, current);
         }
 
 
@@ -181,7 +186,7 @@ function convertGrid(grid, width, height) {
         //condition for Cliff6b (convex) - (c5 and c7 are the same as e but 6 is lower)
         else if (current == "" && c5 == "" && c6 == "lower" && c7 == "") {
           //type = 144
-          createCliff(newGrid, n, m+1, 2, 4, [1,0], 54);
+          createCliff(newGrid, n, m+1, 2, 3, [1,0], 54);
         }
         //condition for Cliff5 (north) - (c5 and c6 are lower than e but 7 is the same)
         else if (current == "" && c5 == "lower" && c6 == "lower" && c7 == ""){
@@ -194,7 +199,7 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n, m+1, 2, 1, [1,0], 32);
         }
         else {
-          createGrass(n, m+1);
+          createGrass(n, m+1, current);
         }
 
       }
