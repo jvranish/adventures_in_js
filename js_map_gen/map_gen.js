@@ -26,13 +26,13 @@ function convertGrid(grid, width, height) {
       var c8 = grid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
 
       var current = grid[i][j];
-      if (current == "" && c5 == "lower" && c4 == "" && c3 == "lower") {
+      if (current == "" && checkLower(c5) && c4 == "" && checkLower(c3)) {
         //c5
         grid[i][j+1 < height? j+1 : 0] = "";
         //c3
         grid[i+1 < width? i+1 : 0][j] = "";
       }
-      if (current == "" && c7 == "lower" && c6 == "" && c5 == "lower") {
+      if (current == "" && checkLower(c7) && c6 == "" && checkLower(c5)) {
         //c7
         grid[i-1 > 0? i-1 : width-1][j] = "";
         //c3
@@ -72,6 +72,12 @@ function convertGrid(grid, width, height) {
     else if (current == "") {
       newGrid[x][y] = newGrid[x][y].concat([10]);
     }
+    else if (current == "coast"){
+      newGrid[x][y] = newGrid[x][y].concat([11]);
+    }
+    else {
+      //newGrid[x][y] = newGrid[x][y].concat([79]);
+    }
     
     //}
     //its a tree!
@@ -79,6 +85,14 @@ function convertGrid(grid, width, height) {
       //fancy code for making a tree
     //}
 
+  }
+  function checkLower(c) {
+    if (c == "lower" ||  c == "coast") {
+      return true//(c == "lower" ||  c == "coast")
+    }
+    else {
+      return false
+    }
   }
 
   var n = 0;
@@ -105,22 +119,22 @@ function convertGrid(grid, width, height) {
         createGrass(n, m);
 
         //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
-        if (current == "" && c1 == "lower" && c8 == "lower" && c7 == "lower"  ) {
+        if (current == "" && checkLower(c1) && checkLower(c8) && checkLower(c7)  ) {
           //type = 0
           createCliff(newGrid, n, m, 2, 2, [1,1], 0);
         }
         //condition for Cliff8b (convex) - (c1 and c7 are the same as e but 8 is lower)
-        else if (current == "" && c1 == "" && c8 == "lower" && c7 == "") {
+        else if (current == "" && c1 == "" && checkLower(c8) && c7 == "") {
           //type = 112
           createCliff(newGrid, n, m, 2, 2, [1,1], 112);
         }
         //condition for Cliff1 (north) - (c1 and c8 are lower than e but 7 is the same)
-        else if (current == "" && c1 == "lower" && c8 == "lower" && c7 == "") {
+        else if (current == "" && checkLower(c1) && checkLower(c8) && c7 == "") {
           //type = 2
           createCliff(newGrid, n, m, 1, 2, [0,1], 2);
         }
         //condition for Cliff7 (west) - (c7 and c8 are lower than e but 1 is the same)
-        else if (current == "" && c1 == "" && c8 == "lower" && c7 == "lower") {
+        else if (current == "" && c1 == "" && checkLower(c8) && checkLower(c7)) {
           //type = 32
           createCliff(newGrid, n, m, 2, 1, [1,0], 32);
         }
@@ -129,22 +143,22 @@ function convertGrid(grid, width, height) {
         }
 
         //condition for Cliff2a (concave) - (c1, c2 and c3 are all lower than e)
-        if (current == "" && c1 == "lower" && c2 == "lower" && c3 == "lower") {
+        if (current == "" && checkLower(c1) && checkLower(c2) && checkLower(c3)) {
             //type = 4
             createCliff(newGrid, n+1, m, 2, 2, [0,1], 4);
         }
         //condition for Cliff2b (convex) - (c1 and c3 are the same as e but 2 is lower
-        else if (current == "" && c1 == "" && c2 == "lower" && c3 == "") {
+        else if (current == "" && c1 == "" && checkLower(c2) && c3 == "") {
           //type = 146
           createCliff(newGrid, n+1, m, 2, 2, [0,1], 114);
         }
         //condition for Cliff1 (north) - (c1 and c2 are lower than e but 3 is the same)
-        else if (current == "" && c1 == "lower" && c2 == "lower" && c3 == "") {
+        else if (current == "" && checkLower(c1) && checkLower(c2) && c3 == "") {
           //type = 2
           createCliff(newGrid, n+1, m, 1, 2, [0,1], 2);
         }
         //condition for Cliff3 (east) - (c3 and c2 are lower than e but 1 is the same)
-        else if (current == "" && c1 == "" && c2 == "lower" && c3 == "lower") {
+        else if (current == "" && c1 == "" && checkLower(c2) && checkLower(c3)) {
           //type = 36
           createCliff(newGrid, n+1, m, 2, 1, [0,0], 36);
         }
@@ -154,22 +168,22 @@ function convertGrid(grid, width, height) {
 
 
         //condition for Cliff4a (concave) - (c5, c4 and c3 are all lower than e)
-        if (current == "" && c5 == "lower" && c4 == "lower" && c3 == "lower") {
+        if (current == "" && checkLower(c5) && checkLower(c4) && checkLower(c3)) {
           //type = 68
           createCliff(newGrid, n+1, m+1, 2, 3, [0,0], 68);
         }
         //condition for Cliff4b (convex) - (c5 and c3 are the same as e but 4 is lower)
-        else if (current == "" && c5 == "" && c4 == "lower" && c3 == "") {
+        else if (current == "" && c5 == "" && checkLower(c4) && c3 == "") {
           //type = 146
           createCliff(newGrid, n+1, m+1, 2, 3, [0,0], 56);
         }
         //condition for Cliff5 (south) - (c5 and c4 are lower than e but 3 is the same)
-        else if (current == "" && c5 == "lower" && c4 == "lower" && c3 == "") {
+        else if (current == "" && checkLower(c5) && checkLower(c4) && c3 == "") {
           //type = 66
           createCliff(newGrid, n+1, m+1, 1, 3, [0,0], 66);
         }
         //condition for Cliff3 (east) - (c4 and c3 are lower than e but 5 is the same)
-        else if (current == "" && c5 == "" && c4 == "lower" && c3 == "lower") {
+        else if (current == "" && c5 == "" && checkLower(c4) && checkLower(c3)) {
           //type = 36
           createCliff(newGrid, n+1, m+1, 2, 1, [0,0], 36);
         }
@@ -179,22 +193,22 @@ function convertGrid(grid, width, height) {
 
 
         //condition for Cliff6a (concave) - (c5, c6 and c7 are all lower than e)
-        if (current == "" && c5 == "lower" && c6 == "lower" && c7 == "lower") {
+        if (current == "" && checkLower(c5) && checkLower(c6) && checkLower(7)) {
           //type = 64
           createCliff(newGrid, n, m+1, 2, 3, [1,0], 64);
         }
         //condition for Cliff6b (convex) - (c5 and c7 are the same as e but 6 is lower)
-        else if (current == "" && c5 == "" && c6 == "lower" && c7 == "") {
+        else if (current == "" && c5 == "" && checkLower(c6) && c7 == "") {
           //type = 144
           createCliff(newGrid, n, m+1, 2, 3, [1,0], 54);
         }
         //condition for Cliff5 (north) - (c5 and c6 are lower than e but 7 is the same)
-        else if (current == "" && c5 == "lower" && c6 == "lower" && c7 == ""){
+        else if (current == "" && checkLower(c5) && checkLower(c6) && c7 == ""){
           //type = 66
           createCliff(newGrid, n, m+1, 1, 3, [0,0], 66);
         }
         //condition for Cliff7 (west) - (c7 and c6 are lower than e but 5 is the same)
-        else if (current == "" && c5 == "" && c6 == "lower" && c7 == "lower") {
+        else if (current == "" && c5 == "" && checkLower(c6) && checkLower(c7)) {
           //type = 32
           createCliff(newGrid, n, m+1, 2, 1, [1,0], 32);
         }
@@ -208,13 +222,13 @@ function convertGrid(grid, width, height) {
         //*****
         // we don't have a tile for ocean yet
         // so ocean is using the stone tile 10
-        newGrid[n][m] = newGrid[n][m].concat([10]);
+        newGrid[n][m] = newGrid[n][m].concat([11]);
 
-        newGrid[n][m+1] = newGrid[n][m+1].concat([10]);
+        newGrid[n][m+1] = newGrid[n][m+1].concat([11]);
 
-        newGrid[n+1][m] = newGrid[n+1][m].concat([10]);
+        newGrid[n+1][m] = newGrid[n+1][m].concat([11]);
 
-        newGrid[n+1][m+1] = newGrid[n+1][m+1].concat([10]);
+        newGrid[n+1][m+1] = newGrid[n+1][m+1].concat([11]);
       }//end of !Ocean
 
       m = m + 2;
