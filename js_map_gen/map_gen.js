@@ -57,9 +57,32 @@ function convertGrid(grid, width, height) {
     }
 
 
+  } 
+  function createTree(newGrid, x, y, w, h, offset, type) {
+    var s1 = x-offset[0];
+    var s2 = y-offset[1];
+    //check to make sure we won't display over anything else
+    var pass = true;
+    for (var i = 0; i < w; i++) {
+      for (var j = 0; j < h; j++) {
+        if (newGrid[s1+i][s2+j].length > 1 || newGrid[s1+i][s2+j].indexOf(10) == -1) {
+          //pass = false
+          
+        }
+      }
+    }
+    if (pass) {
+      for (var i = 0; i < w; i++) {
+        for (var j = 0; j < h; j++) {
+          newGrid[s1+i][s2+j] = [type + i + j*16].concat(newGrid[s1+i][s2+j]);
+        }
+      }
+    }
+
+
   }
   function createGrass(x, y, current) {
-
+    var tree = null; 
     //if we want to create a tree this is where we would do it.
     //var isTree = prng.nextIntRange(0, 100);
     //its just grass
@@ -68,6 +91,10 @@ function convertGrid(grid, width, height) {
     //newGrid[x][y] = newGrid[x][y].splice(0, 0, [79]);
     if (current == "lower") {
       newGrid[x][y] = newGrid[x][y].concat([79]);
+      if (Math.floor((Math.random() * 500) + 1) < 5) {
+        tree = [x,y];
+        
+      } 
     }
     else if (current == "") {
       newGrid[x][y] = newGrid[x][y].concat([10]);
@@ -79,15 +106,19 @@ function convertGrid(grid, width, height) {
       //newGrid[x][y] = newGrid[x][y].concat([79]);
     }
     
+    
     //}
     //its a tree!
     //else {
       //fancy code for making a tree
     //}
-
+    //if (tree != null) {
+      //console.log(tree) 
+    //}
+    return tree;
   }
   function checkLower(c) {
-    if (c == "lower" ||  c == "coast") {
+    if (c == "lower" ||  c == "coast" || c == "ocean") {
       return true//(c == "lower" ||  c == "coast")
     }
     else {
@@ -96,8 +127,9 @@ function convertGrid(grid, width, height) {
   }
 
   var n = 0;
+  var trees = [];
+  var tree;
   for (var i = 0; i < height; i++) {
-
     var m = 0;
     for (var j = 0; j < width; j++) {
 
@@ -116,7 +148,10 @@ function convertGrid(grid, width, height) {
         var c8 = grid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
 
         var current = grid[i][j];
-        createGrass(n, m);
+        tree = createGrass(n, m, current)
+        if (tree != null) {
+          trees.concat(tree);
+        }
 
         //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
         if (current == "" && checkLower(c1) && checkLower(c8) && checkLower(c7)  ) {
@@ -139,7 +174,11 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n, m, 2, 1, [1,0], 32);
         }
         else {
-          createGrass(n, m, current);
+          tree = createGrass(n, m, current)
+          //console.log(tree)
+          if (tree != null) {
+            trees.concat(tree);
+          }
         }
 
         //condition for Cliff2a (concave) - (c1, c2 and c3 are all lower than e)
@@ -163,7 +202,10 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n+1, m, 2, 1, [0,0], 36);
         }
         else {
-          createGrass(n+1, m, current);
+          tree = createGrass(n+1, m, current)
+          if (tree != null) {
+            trees.concat(tree);
+          }
         }
 
 
@@ -188,12 +230,15 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n+1, m+1, 2, 1, [0,0], 36);
         }
         else {
-          createGrass(n+1, m+1, current);
+          tree = createGrass(n+1, m+1, current)
+          if (tree != null) {
+            trees.concat(tree);
+          }
         }
 
 
         //condition for Cliff6a (concave) - (c5, c6 and c7 are all lower than e)
-        if (current == "" && checkLower(c5) && checkLower(c6) && checkLower(7)) {
+        if (current == "" && checkLower(c5) && checkLower(c6) && checkLower(c7)) {
           //type = 64
           createCliff(newGrid, n, m+1, 2, 3, [1,0], 64);
         }
@@ -213,7 +258,10 @@ function convertGrid(grid, width, height) {
           createCliff(newGrid, n, m+1, 2, 1, [1,0], 32);
         }
         else {
-          createGrass(n, m+1, current);
+          tree = createGrass(n, m+1, current)
+          if (tree != null) {
+            trees.concat(tree);
+          }
         }
 
       }
@@ -236,6 +284,15 @@ function convertGrid(grid, width, height) {
 
     n = n + 2;
   }//end of i
+  console.log(trees.length)
+  //loop through trees, make trees, check for anything underneath (cliff... tree)
+  for (var i = 0; i < trees.length; i++) {
+    //if (trees[i].length > 0) {
+      createTree(newGrid, trees[i][0], trees[i][1], 3, 4, [0,0], 196)
+    //}
+  }
+  
+  
   return newGrid;
 }
 
@@ -513,14 +570,12 @@ function makeGrid(coastPoints, RoomPoints, pathPoints, width, height) {
 }
 //begin function group for Fill Ocean
 function fillOcean(g, width, height) {
-  // console.log(open.length);
   var count = 0;
   var process_next = searchSurroundingSpace(g, 1, 1, width, height);
   do {
     var open = process_next;
     process_next = [];
     while (open.length != 0) {
-    // console.log("here");
       var nextSpace = open.pop();
       if  (g[nextSpace[0]][nextSpace[1]] == "")
       {
@@ -533,14 +588,13 @@ function fillOcean(g, width, height) {
 }
 
 function fillLower(g, width, height, start) {
-  // console.log(open.length);
+
   var count = 0;
   var process_next = searchSurroundingSpace(g, start.x, start.y, width, height);
   do {
     var open = process_next;
     process_next = [];
     while (open.length != 0) {
-    // console.log("here");
       var nextSpace = open.pop();
       if  (g[nextSpace[0]][nextSpace[1]] == "")
       {
@@ -592,6 +646,8 @@ function check_xy(xy, length) {
   return xy
 }
 //end function group for fillOcean
+
+
 
 function renderGrid(ctx, grid) {
   for (var x in grid) {
