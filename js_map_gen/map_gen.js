@@ -65,18 +65,24 @@ function convertGrid(grid, width, height) {
     var pass = true;
     for (var i = 0; i < w; i++) {
       for (var j = 0; j < h; j++) {
-        if (newGrid[s1+i][s2+j].length > 1 || newGrid[s1+i][s2+j].indexOf(10) == -1) {
-          //pass = false
+        if (newGrid[s1+i][s2+j].length > 1 ){//|| newGrid[s1+i][s2+j].indexOf(10) != -1) { 
+          pass = false;
           
         }
-      }
-    }
-    if (pass) {
-      for (var i = 0; i < w; i++) {
-        for (var j = 0; j < h; j++) {
-          newGrid[s1+i][s2+j] = [type + i + j*16].concat(newGrid[s1+i][s2+j]);
+        else
+        {
+          
+          console.log(newGrid[s1+i][s2+j].length);
         }
       }
+      if (pass) {
+        for (var i = 0; i < w; i++) {
+          for (var j = 0; j < h; j++) {
+            newGrid[s1+i][s2+j] = [type + i + j*16].concat(newGrid[s1+i][s2+j]);
+          }
+        }
+      }
+        
     }
 
 
@@ -150,7 +156,7 @@ function convertGrid(grid, width, height) {
         var current = grid[i][j];
         tree = createGrass(n, m, current)
         if (tree != null) {
-          trees.concat(tree);
+          trees.push(tree);
         }
 
         //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
@@ -177,7 +183,7 @@ function convertGrid(grid, width, height) {
           tree = createGrass(n, m, current)
           //console.log(tree)
           if (tree != null) {
-            trees.concat(tree);
+            trees.push(tree);
           }
         }
 
@@ -204,7 +210,7 @@ function convertGrid(grid, width, height) {
         else {
           tree = createGrass(n+1, m, current)
           if (tree != null) {
-            trees.concat(tree);
+            trees.push(tree);
           }
         }
 
@@ -232,7 +238,7 @@ function convertGrid(grid, width, height) {
         else {
           tree = createGrass(n+1, m+1, current)
           if (tree != null) {
-            trees.concat(tree);
+            trees.push(tree);
           }
         }
 
@@ -260,7 +266,7 @@ function convertGrid(grid, width, height) {
         else {
           tree = createGrass(n, m+1, current)
           if (tree != null) {
-            trees.concat(tree);
+            trees.push(tree);
           }
         }
 
