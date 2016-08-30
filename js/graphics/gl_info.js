@@ -119,7 +119,7 @@ GlInfo.prototype.renderMap = function() {
   twgl.setUniforms(this.programInfo, {
     translation: [Math.round(this.translation.x), Math.round(this.translation.y)],
     resolution: [this.gl.canvas.width, this.gl.canvas.height],
-    textureSize: [512, 512],
+    textureSize: [512, 1024],
     image: this.textures.tiles
   });
   twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, this.mapBufferInfo);
