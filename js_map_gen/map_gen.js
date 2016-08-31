@@ -106,7 +106,7 @@ function convertGrid(grid, width, height) {
       newGrid[x][y] = newGrid[x][y].concat([10]);
     }
     else if (current == "coast"){
-      newGrid[x][y] = newGrid[x][y].concat([11]);
+      newGrid[x][y] = newGrid[x][y].concat([324]);
     }
     else {
       //newGrid[x][y] = newGrid[x][y].concat([79]);
@@ -276,13 +276,13 @@ function convertGrid(grid, width, height) {
         //*****
         // we don't have a tile for ocean yet
         // so ocean is using the stone tile 10
-        newGrid[n][m] = newGrid[n][m].concat([11]);
+        newGrid[n][m] = newGrid[n][m].concat([324]);
 
-        newGrid[n][m+1] = newGrid[n][m+1].concat([11]);
+        newGrid[n][m+1] = newGrid[n][m+1].concat([324]);
 
-        newGrid[n+1][m] = newGrid[n+1][m].concat([11]);
+        newGrid[n+1][m] = newGrid[n+1][m].concat([324]);
 
-        newGrid[n+1][m+1] = newGrid[n+1][m+1].concat([11]);
+        newGrid[n+1][m+1] = newGrid[n+1][m+1].concat([324]);
       }//end of !Ocean
 
       m = m + 2;
