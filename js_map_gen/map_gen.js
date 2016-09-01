@@ -26,6 +26,7 @@ function convertGrid(grid, width, height) {
       var c8 = grid[i-1 > 0? i-1 : width-1][j-1 > 0? j-1 : height-1];
 
       var current = grid[i][j];
+      //clean cliffs
       if (current == "" && checkLower(c5) && c4 == "" && checkLower(c3)) {
         //c5
         grid[i][j+1 < height? j+1 : 0] = "";
@@ -37,6 +38,19 @@ function convertGrid(grid, width, height) {
         grid[i-1 > 0? i-1 : width-1][j] = "";
         //c3
         grid[i][j+1 < height? j+1 : 0] = "";
+      }
+      //clean coastline
+      if (current == "ocean" && c5 == "coast" && c4 == "ocean" && c3 == "coast") {
+        //c5
+        grid[i][j+1 < height? j+1 : 0] = "ocean";
+        //c3
+        grid[i+1 < width? i+1 : 0][j] = "ocean";
+      }
+      if (current == "ocean" && c7 == "coast" && c6 == "ocean" && c5 == "coast") {
+        //c7
+        grid[i-1 > 0? i-1 : width-1][j] = "ocean";
+        //c3
+        grid[i][j+1 < height? j+1 : 0] = "ocean";
       }
 
     }
@@ -106,7 +120,7 @@ function convertGrid(grid, width, height) {
       newGrid[x][y] = newGrid[x][y].concat([10]);
     }
     else if (current == "coast"){
-      newGrid[x][y] = newGrid[x][y].concat([324]);
+      newGrid[x][y] = newGrid[x][y].concat([79]);
     }
     else {
       //newGrid[x][y] = newGrid[x][y].concat([79]);
@@ -131,7 +145,15 @@ function convertGrid(grid, width, height) {
       return false
     }
   }
-
+  function checkShore(c) {
+    if (c == "ocean") {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+  
   var n = 0;
   var trees = [];
   var tree;
@@ -158,6 +180,10 @@ function convertGrid(grid, width, height) {
         if (tree != null) {
           trees.push(tree);
         }
+        
+        //**********************************************************
+        //     Cliff Conversion
+        //**********************************************************
 
         //condition for Cliff8a (concave) - (c1, c8 and c7 are all lower and e isn't)
         if (current == "" && checkLower(c1) && checkLower(c8) && checkLower(c7)  ) {
@@ -253,7 +279,7 @@ function convertGrid(grid, width, height) {
           //type = 144
           createCliff(newGrid, n, m+1, 2, 3, [1,0], 54);
         }
-        //condition for Cliff5 (north) - (c5 and c6 are lower than e but 7 is the same)
+        //condition for Cliff5 (south) - (c5 and c6 are lower than e but 7 is the same)
         else if (current == "" && checkLower(c5) && checkLower(c6) && c7 == ""){
           //type = 66
           createCliff(newGrid, n, m+1, 1, 3, [0,0], 66);
@@ -269,7 +295,115 @@ function convertGrid(grid, width, height) {
             trees.push(tree);
           }
         }
+      //********************************************//
+      // end of cliffs
+      //********************************************//
+      
+      //**********************************************************
+      //     Coast Conversion
+      //**********************************************************
+        
+        //condition for Coast4a (concave) - (c1, c8 and c7 are all lower and e isn't)
+        if (current == "coast" && checkShore(c1) && checkShore(c8) && checkShore(c7)  ) {
+          //type = 0
+          createCliff(newGrid, n, m, 1, 1, [0,0], 342);//341
+        }
+        //condition for Coast4b (convex) - (c1 and c7 are the same as e but 8 is lower)
+        else if (current == "coast" && c1 == "coast" && checkShore(c8) && c7 == "coast") {
+          //type = 112
+          createCliff(newGrid, n, m, 1, 1, [0,0], 359);
+        }
+        //condition for Coast5 (south) - (c1 and c8 are lower than e but 7 is the same)
+        else if (current == "coast" && checkShore(c1) && checkShore(c8) && c7 == "coast") {
+          //type = 2
+          createCliff(newGrid, n, m, 1, 1, [0,0], 340);
+        }
+        //condition for Coast3 (east) - (c7 and c8 are lower than e but 1 is the same)
+        else if (current == "coast" && c1 == "coast" && checkShore(c8) && checkShore(c7)) {
+          //type = 32
+          createCliff(newGrid, n, m, 1, 1, [0,0], 325);
+        }
+        else {
+          createGrass(n, m, current)
+          
+        }
 
+        //condition for Coast6a (concave) - (c1, c2 and c3 are all lower than e)
+        if (current == "coast" && checkShore(c1) && checkShore(c2) && checkShore(c3)) {
+            //type = 4
+            createCliff(newGrid, n+1, m, 1, 1, [0,0], 343);//339
+        }
+        //condition for Coast6b (convex) - (c1 and c3 are the same as e but 2 is lower
+        else if (current == "coast" && c1 == "coast" && checkShore(c2) && c3 == "coast") {
+          //type = 146
+          createCliff(newGrid, n+1, m, 1, 1, [0,0], 358);
+        }
+        //condition for Coast5 (south) - (c1 and c2 are lower than e but 3 is the same)
+        else if (current == "coast" && checkShore(c1) && checkShore(c2) && c3 == "coast") {
+          //type = 2
+          createCliff(newGrid, n+1, m, 1, 1, [0,0], 340);
+        }
+        //condition for Coast7 (west) - (c3 and c2 are lower than e but 1 is the same)
+        else if (current == "coast" && c1 == "coast" && checkShore(c2) && checkShore(c3)) {
+          //type = 36
+          createCliff(newGrid, n+1, m, 1, 1, [0,0], 323);
+        }
+        else {
+          createGrass(n+1, m, current)
+        }
+
+
+        //condition for Coast8a (concave) - (c5, c4 and c3 are all lower than e)
+        if (current == "coast" && checkShore(c5) && checkShore(c4) && checkShore(c3)) {
+          //type = 68
+          createCliff(newGrid, n+1, m+1, 1, 1, [0,0], 307);//307
+        }
+        //condition for Coast8b (convex) - (c5 and c3 are the same as e but 4 is lower)
+        else if (current == "coast" && c5 == "coast" && checkShore(c4) && c3 == "coast") {
+          //type = 146
+          createCliff(newGrid, n+1, m+1, 1, 1, [0,0], 342);
+        }
+        //condition for Coast1 (north) - (c5 and c4 are lower than e but 3 is the same)
+        else if (current == "coast" && checkShore(c5) && checkShore(c4) && c3 == "coast") {
+          //type = 66
+          createCliff(newGrid, n+1, m+1, 1, 1, [0,0], 308);
+        }
+        //condition for Coast7 (west) - (c4 and c3 are lower than e but 5 is the same)
+        else if (current == "coast" && c5 == "coast" && checkShore(c4) && checkShore(c3)) {
+          //type = 36
+          createCliff(newGrid, n+1, m+1, 1, 1, [0,0], 323);
+        }
+        else {
+          createGrass(n+1, m+1, current)
+        }
+
+
+        //condition for Coast2a (concave) - (c5, c6 and c7 are all lower than e)
+        if (current == "coast" && checkShore(c5) && checkShore(c6) && checkShore(c7)) {
+          //type = 64
+          createCliff(newGrid, n, m+1, 1, 1, [0,0], 343);//309
+        }
+        //condition for Coast2b (convex) - (c5 and c7 are the same as e but 6 is lower)
+        else if (current == "coast" && c5 == "coast" && checkShore(c6) && c7 == "coast") {
+          //type = 144
+          createCliff(newGrid, n, m+1, 1, 1, [0,0], 343);
+        }
+        //condition for Coast1 (north) - (c5 and c6 are lower than e but 7 is the same)
+        else if (current == "coast" && checkShore(c5) && checkShore(c6) && c7 == "coast"){
+          //type = 66
+          createCliff(newGrid, n, m+1, 1, 1, [0,0], 308);
+        }
+        //condition for Coast3 (east) - (c7 and c6 are lower than e but 5 is the same)
+        else if (current == "coast" && c5 == "coast" && checkShore(c6) && checkShore(c7)) {
+          //type = 32
+          createCliff(newGrid, n, m+1, 1, 1, [0,0], 325);
+        }
+        else {
+          createGrass(n, m+1, current)
+        }
+        //********************************************//
+        //end of coast conversion
+        //********************************************//
       }
       else {//if it is an ocean
         //we are expanding every square into four squares. In this case all four are an exact copy
