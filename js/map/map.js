@@ -11,7 +11,9 @@ function Map(mapSizeTiles, mapSeed, prng) {
   //this.tileGrid = this.generateRandomMap(mapSizeTiles, mapSeed);
   // generateMap(mapSizeTiles);
   // this.tileGrid = mapFile;
-  this.tileGrid = generateMap(mapSizeTiles, mapSeed);
+  var [tileGrid, startPos] = generateMap(mapSizeTiles, mapSeed);
+  this.tileGrid = tileGrid;
+  this.startingPos = startPos;
   //debug();
   //this.glInfo = this.generateMapGlCoords();
 }

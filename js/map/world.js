@@ -68,7 +68,7 @@ World.prototype.getChecksum = function() {
 };
 
 World.prototype.playerJoined = function(id) {
-  this.players[id] = new Character(new Vector2d(0, 0), RIGHT);
+  this.players[id] = new Character(this.map.startingPos.scale(32), RIGHT);
 };
 
 World.prototype.playerLeft = function(id) {

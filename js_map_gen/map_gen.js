@@ -859,9 +859,35 @@ function generateMapComponents(size, seed) {
   return [sections, roomsList, pathList];
 }
 
+function findStartingPosition(grid, size, predicate) {
+  var dir = new Vector2d(1, 0);
+  var w = Math.min(size.x, size.y) - 1;
+  var search_length = w * w;
+  var segment_length = 1;
+  var cells_passed = 0;
+  var currentPos = size.scale(0.5);
+  for (var i = 0; i < search_length; i++ ) {
+    if (predicate(currentPos)) {
+      break;
+    }
+    cells_passed++;
+    currentPos = currentPos.add(dir);
+    if (cells_passed == segment_length) {
+      cells_passed = 0;
+      dir = dir.perpendicular();
+      if (dir.y == 0) { segment_length++; }
+    }
+  }
+  return currentPos;
+}
+
 function generateMap(size, seed) {
   var [sections, roomsList, pathList] = generateMapComponents(size, seed)
   var grid = makeGrid(sections, roomsList, pathList, size.x, size.y);
-  return convertGrid(grid, size.x, size.y);
+  var convertedGrid = convertGrid(grid, size.x, size.y);
+  var startingPos = findStartingPosition(convertedGrid, size.scale(2), function(p) {
+    return convertedGrid[p.x][p.y][0] == 79;
+  });
+  return [convertedGrid, startingPos];
 }
 
