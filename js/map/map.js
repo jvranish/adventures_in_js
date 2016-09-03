@@ -18,6 +18,11 @@ function Map(mapSizeTiles, mapSeed, prng) {
   //this.glInfo = this.generateMapGlCoords();
 }
 
+Map.prototype.isWalkable = function(coordConverter, p) {
+  var f = coordConverter.worldToTile(p).floor();
+  return this.tileGrid[f.x][f.y][0] == 79;
+}
+
 Map.prototype.generateRandomMap = function(size, seed) {
   var map = [];
   var prng = new ParkMillerRNG(seed);

@@ -120,7 +120,7 @@ function main() {
 
     gameState.coordConverter.update(gameState.localPlayer.playerPos);
     gameState.glInfo.update();
-    gameState.world.update(dt);
+    gameState.world.update(gameState.coordConverter, dt);
     sessionStorage.setItem('world', JSON.stringify(gameState.world.getData()));
   }
   
