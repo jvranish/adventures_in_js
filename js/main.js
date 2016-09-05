@@ -26,19 +26,9 @@ FakeSim.prototype.update = function(now) {
   return this.world.update(dt);
 }
 
-function createSim(testMode, world) {
+function createSim(multiplayer, world) {
   var sim = null;
-  if (testMode === "true") {
-    var storedWorld = sessionStorage.getItem('world');
-    if (storedWorld) {
-      world.setData(JSON.parse(storedWorld));
-    } else {
-      world.playerJoined("asdf");
-    }
-
-    sim = new FakeSim(world);
-
-  } else {
+  if (multiplayer === "true") {
     sim = SimSim.createSimulation({
         adapter: {
             type: 'socket_io',
@@ -47,6 +37,15 @@ function createSim(testMode, world) {
         world: world
     });
     sim.start();
+  } else {
+    var storedWorld = sessionStorage.getItem('world');
+    if (storedWorld) {
+      world.setData(JSON.parse(storedWorld));
+    } else {
+      world.playerJoined("asdf");
+    }
+
+    sim = new FakeSim(world);
   }
   return sim
 }
@@ -57,12 +56,12 @@ function main() {
   function init() {
     var canvas = document.getElementById("canvas");
     // twgl.resizeCanvasToDisplaySize(canvas);
-    var testMode = getParameterByName("testMode");
+    var multiplayer = getParameterByName("multiplayer");
 
     var mapSeed = Math.floor(Math.random() * 2147483648);
     world = new World(new Vector2d(300, 300), 12345, mapSeed);
 
-    sim = createSim(testMode, world);
+    sim = createSim(multiplayer, world);
   }
 
   var initDone = false;
