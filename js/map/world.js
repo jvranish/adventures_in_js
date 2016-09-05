@@ -17,6 +17,18 @@ function arrayRehydrate(constructor, elems) {
 //   canvas.height = canvasSize.y;
 //   return canvasSize;
 // }
+
+function World(mapSizeTiles, seed, mapSeed, map, players) {
+  this.mapSizeTiles = mapSizeTiles;
+  this.mapSize = this.mapSizeTiles.scale(32);
+  this.prng = new ParkMillerRNG(seed);
+
+  this.mapSeed = mapSeed;
+
+  this.map = map;
+
+  this.players = players;
+}
 function World(mapSizeTiles, seed, mapSeed) {
   this.mapSizeTiles = mapSizeTiles;
   this.mapSize = this.mapSizeTiles.scale(32);
@@ -31,6 +43,10 @@ function World(mapSizeTiles, seed, mapSeed) {
   //this.map = this.randomMap(this.mapSizeTiles, this.mapSeed);
 
   this.players = {};
+}
+
+function generateNewWorld(mapSizeTiles, seed, mapSeed) {
+
 }
 
 World.prototype.getData = function() {
@@ -86,11 +102,11 @@ World.prototype.theEnd = function() {
 World.prototype.incomingEvent = function(id, event) {
   if (event.newDestination)
   {
-    this.players[id].setDestination(event.newDestination);
+    this.players[id].setDestination(Vector2d.rehydrate(event.newDestination));
   }
 };
 
-World.prototype.update = function(coordConverter, dt) {
+World.prototype.update = function(dt) {
   for (var character_id in this.players) {
     var character = this.players[character_id];
     var maxTravelDist = character.walkSpeed * dt;
@@ -105,7 +121,7 @@ World.prototype.update = function(coordConverter, dt) {
           .sub(character.playerPos);
         var moveAmount = displacement.clipTo(maxTravelDist);
         var newPos = character.playerPos.add(moveAmount);
-        if (this.map.isWalkable(coordConverter, newPos)) {
+        if (this.map.isWalkable(newPos)) {
           character.playerPos = character.playerPos.add(moveAmount);
         } else {
           character.destinationPos = null;

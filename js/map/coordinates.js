@@ -46,6 +46,17 @@ CoordinateConverter.prototype.tileToWorld = function(tileCoord)
   return tileCoord.scale(32);
 }
 
+function worldToTile(worldCoord)
+{
+  // tile coords are same as viewPortPosition, but just scaled by 32
+  return worldCoord.scale(1/32) //.mod(this.world.mapSizeTiles);
+}
+function tileToWorld(tileCoord)
+{
+  // tile coords are same as world, but just scaled by 32
+  return tileCoord.scale(32);
+}
+
 CoordinateConverter.prototype.tileToCanvas = function(tileCoord)
 {
   return this.worldToCanvas(this.tileToWorld(tileCoord));

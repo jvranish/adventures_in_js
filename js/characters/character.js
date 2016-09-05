@@ -15,14 +15,14 @@ var Character = function(aPlayerPos, facingDir) {
   this.playerPos = aPlayerPos;
   this.facingDir = facingDir;
   this.destinationPos = null;
-  this.walkSpeed = 1000.0;
+  this.walkSpeed = 100.0;
 };
 
 Character.rehydrate = function(obj) {
   Vector2d.rehydrate(obj.playerPos);
   Vector2d.rehydrate(obj.facingDir);
   if (obj.destinationPos !== null) {
-    Vector2d.rehydrate(this.destinationPos);
+    Vector2d.rehydrate(obj.destinationPos);
   }
   obj.__proto__ = Character.prototype;
   return obj;

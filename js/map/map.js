@@ -18,8 +18,8 @@ function Map(mapSizeTiles, mapSeed, prng) {
   //this.glInfo = this.generateMapGlCoords();
 }
 
-Map.prototype.isWalkable = function(coordConverter, p) {
-  var f = coordConverter.worldToTile(p).floor();
+Map.prototype.isWalkable = function(p) {
+  var f = worldToTile(p).floor();
   return this.tileGrid[f.x][f.y][0] == 79;
 }
 
