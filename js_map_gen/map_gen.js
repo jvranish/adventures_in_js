@@ -3,8 +3,8 @@
 //**********************************************
 //  New code for converting
 // ******************************************
-function convertGrid(grid, width, height) {
-
+function convertGrid(grid, width, height, seed) {
+  var prng = new ParkMillerRNG(seed);
   //clean up any annomolies that our tiles can't render
   var newGrid = new Array(height*2);
   for (var x = 0; x < height*2; x++)
@@ -79,7 +79,7 @@ function convertGrid(grid, width, height) {
     var pass = true;
     for (var i = 0; i < w; i++) {
       for (var j = 0; j < h; j++) {
-        if (newGrid[s1+i][s2+j].length > 1 ){//|| newGrid[s1+i][s2+j].indexOf(10) != -1) { 
+        if (newGrid[s1+i][s2+j].length > 1 || newGrid[s1+i][s2+j].indexOf(79) < 0) {//|| newGrid[s1+i][s2+j].indexOf(10) != -1) { 
           pass = false;
           
         }
@@ -89,14 +89,13 @@ function convertGrid(grid, width, height) {
           console.log(newGrid[s1+i][s2+j].length);
         }
       }
-      if (pass) {
-        for (var i = 0; i < w; i++) {
-          for (var j = 0; j < h; j++) {
-            newGrid[s1+i][s2+j] = [type + i + j*16].concat(newGrid[s1+i][s2+j]);
-          }
+    }
+    if (pass) {
+      for (var i = 0; i < w; i++) {
+        for (var j = 0; j < h; j++) {
+          newGrid[s1+i][s2+j] = [type + i + j*16].concat(newGrid[s1+i][s2+j]);
         }
       }
-        
     }
 
 
@@ -110,11 +109,12 @@ function convertGrid(grid, width, height) {
     
     //newGrid[x][y] = newGrid[x][y].splice(0, 0, [79]);
     if (current == "lower") {
-      newGrid[x][y] = newGrid[x][y].concat([79]);
-      if (Math.floor((Math.random() * 500) + 1) < 5) {
-        tree = [x,y];
-        
-      } 
+      if (newGrid[x][y].indexOf(79) < 0) {
+        newGrid[x][y] = newGrid[x][y].concat([79]);
+        if (Math.floor((prng.nextDouble() * 500) + 1) < 5) {
+          tree = [x,y];
+        }
+      }
     }
     else if (current == "") {
       newGrid[x][y] = newGrid[x][y].concat([10]);
@@ -180,7 +180,7 @@ function convertGrid(grid, width, height) {
         if (tree != null) {
           trees.push(tree);
         }
-        
+
         //**********************************************************
         //     Cliff Conversion
         //**********************************************************
@@ -884,7 +884,7 @@ function findStartingPosition(grid, size, predicate) {
 function generateMap(size, seed) {
   var [sections, roomsList, pathList] = generateMapComponents(size, seed)
   var grid = makeGrid(sections, roomsList, pathList, size.x, size.y);
-  var convertedGrid = convertGrid(grid, size.x, size.y);
+  var convertedGrid = convertGrid(grid, size.x, size.y, seed);
   var startingPos = findStartingPosition(convertedGrid, size.scale(2), function(p) {
     return convertedGrid[p.x][p.y][0] == 79;
   });
