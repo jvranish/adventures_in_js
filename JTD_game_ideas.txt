@@ -1,0 +1,28 @@
+So I am thinking that before we go much further in our game development we will need an idea of where we are going.  These are my thoughts/ideas.  Everything in here is on the drawing board so feel free to mod anything.
+
+
+Magika – I love the fact that its skill based and not level based.  I really enjoy the spell combinations that you can make.  But it lacks variety even when you choose a different wizard you don’t really get different abilities (at least not significantly).
+
+Guild Wars – I like how you can choose different classes and it changes what you can do.  Makes building a team more interesting because each player has different advantages (and disadvantages) that they bring to the team. But… the having to play constantly to build up your levels is LAME.
+
+DOTA – I really enjoy the character play (not so much the game play).
+
+
+If we had classes that would give you different skills and different "ingredients” which would let you create different spells and have different abilities.
+
+Classes:
+
+Tinker/Builder
+builds contraptions that can be used offensively or defensively (can even be given to other players to control?). Can build things or augment things that improve other player’s abilities.  Not a strong player by himself but great team player (gives lots of bonuses to other players).  Would need to gather/collect resources/items.
+
+Elementals
+Use a combination of the elements to build and cast spells (fire, water, earth, air).  Similar to Magika.  Can create elemental minions?
+
+Life force
+Can use anything that is alive (can tame animals, liven trees), can cast life (healing) and able raise players from the dead (or at least it’s easier for them than any other player).
+
+Death force
+Uses anything that’s dead (reanimation), can cast death onto people (which obviously… does damage).  Cannot cast regeneration on other players.
+
+Invoker
+? not sure… but the name sounds cool.
