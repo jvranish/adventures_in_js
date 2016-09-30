@@ -1,0 +1,18 @@
+TODO for adventures
+
+BASIC GAMEPLAY
+-mini map
+-unique character images/coloring (so we can tell the difference between players on multiplayer)
+-improved user controls (make it easier to control and move characters, figure out what commands we will use to fight)
+-add pathing algorithms so characters don't get stuck on cliffs so easily
+-improved UI
+
+GRAPHICS I
+-shadows
+-basic spells
+-cast/die animation
+
+AI I
+-add monsters
+-give monsters ability to do damage
+-create basic monster AI
