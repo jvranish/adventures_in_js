@@ -102,31 +102,13 @@ World.prototype.theEnd = function() {
 World.prototype.incomingEvent = function(id, event) {
   if (event.newDestination)
   {
-    this.players[id].setDestination(Vector2d.rehydrate(event.newDestination));
+    this.players[id].walkTo(Vector2d.rehydrate(event.newDestination));
   }
 };
 
 World.prototype.update = function(dt) {
   for (var character_id in this.players) {
     var character = this.players[character_id];
-    var maxTravelDist = character.walkSpeed * dt;
-    if (character.destinationPos)
-    {
-      if (character.playerPos.equal(character.destinationPos)) {
-        character.destinationPos = null;
-      }
-      else {
-        var displacement = character
-          .destinationPos
-          .sub(character.playerPos);
-        var moveAmount = displacement.clipTo(maxTravelDist);
-        var newPos = character.playerPos.add(moveAmount);
-        if (this.map.isWalkable(newPos)) {
-          character.playerPos = character.playerPos.add(moveAmount);
-        } else {
-          character.destinationPos = null;
-        }
-      }
-    }
+    character.update(dt, this.map);
   }
 };
