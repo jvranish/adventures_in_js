@@ -32,7 +32,7 @@ function createSim(multiplayer, world) {
     sim = SimSim.createSimulation({
         adapter: {
             type: 'socket_io',
-            options: { url: "http://54.89.82.62:4050" }
+            options: { url: "http://34.207.254.53:4050" }
         },
         world: world
     });
